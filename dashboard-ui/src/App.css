@@ -1,0 +1,228 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap");
+
+:root {
+  --color-bg-primary: #22223b;
+  --color-bg-secondary: #4a4e69;
+  --color-accent: #c9ada7;
+  --color-accent-muted: #9a8c98;
+  --color-text-primary: #f2e9e4;
+  --color-text-secondary: #9a8c98;
+  --glass-bg: rgba(74, 78, 105, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --font-main: "Outfit", sans-serif;
+  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Landing Page Styles */
+.landing-container {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-hero {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.landing-hero__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.15;
+  z-index: 1;
+  filter: grayscale(1) contrast(1.2);
+}
+
+.landing-hero__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent,
+    var(--color-bg-primary) 90%
+  );
+  z-index: 2;
+}
+
+.landing-hero__content {
+  position: relative;
+  z-index: 3;
+  max-width: 900px;
+  text-align: center;
+  animation: fadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.2rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--color-accent);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 2.5rem;
+  backdrop-filter: blur(12px);
+}
+
+.landing-title {
+  font-size: clamp(3.5rem, 12vw, 6rem);
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2rem;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, #ffffff 0%, var(--color-text-secondary) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-subtitle {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--color-text-secondary);
+  margin-bottom: 3.5rem;
+  line-height: 1.6;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 400;
+}
+
+.landing-actions {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+/* Industry Standard SaaS Buttons */
+.btn-primary {
+  padding: 1.1rem 2.8rem;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 14px;
+  color: var(--color-bg-primary);
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: 0 10px 40px rgba(201, 173, 167, 0.2);
+}
+
+.btn-primary:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 15px 50px rgba(201, 173, 167, 0.4);
+}
+
+.btn-secondary {
+  padding: 1.1rem 2.8rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  backdrop-filter: blur(12px);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header/Nav - Cleaner SaaS Logic */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem 6%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  backdrop-filter: blur(24px);
+  background: rgba(34, 34, 59, 0.6);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.landing-logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.landing-logo span {
+  color: var(--color-accent);
+}
+
+/* Tiny SignIn Button Styling */
+.btn-nav-signin {
+  padding: 0.6rem 1.4rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-nav-signin:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-accent);
+}
+
+/* Dashboard View Transition */
+.dashboard-view {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  animation: fadeIn 0.8s ease-out;
+}

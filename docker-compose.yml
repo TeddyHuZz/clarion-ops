@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: clarion-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-clarion_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clarion_admin_password}
+      POSTGRES_DB: ${POSTGRES_DB:-clarion_ops}
+      DATA_SERVICE_DB: ${DATA_SERVICE_DB:-data_service}
+      DATA_SERVICE_USER: ${DATA_SERVICE_USER:-data_service_app}
+      DATA_SERVICE_PASSWORD: ${DATA_SERVICE_PASSWORD:-data_service_password}
+      DATA_SERVICE_SCHEMA: ${DATA_SERVICE_SCHEMA:-data}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - clarion-dev
+
+volumes:
+  postgres_data:
+
+networks:
+  clarion-dev:
+    driver: bridge

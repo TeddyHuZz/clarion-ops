@@ -14,8 +14,8 @@ import {
   ArrowDownRight,
   CheckCircle2,
 } from "lucide-react";
-import "./Dashboard.css";
 import { SignOutButton, UserButton } from "@clerk/react";
+import "./Dashboard.css";
 
 interface StatCardProps {
   label: string;
@@ -55,28 +55,28 @@ export function Dashboard() {
     {
       id: 1,
       title: "SQL Injection attempt detected",
-      severity: "high",
+      severity: "high" as const,
       service: "auth-service",
       time: "2m ago",
     },
     {
       id: 2,
       title: "Dependency vulnerability found",
-      severity: "medium",
+      severity: "medium" as const,
       service: "api-gateway",
       time: "15m ago",
     },
     {
       id: 3,
       title: "Unauthorized access blocked",
-      severity: "high",
+      severity: "high" as const,
       service: "db-proxy",
       time: "1h ago",
     },
     {
       id: 4,
       title: "Pipeline linting failed",
-      severity: "low",
+      severity: "low" as const,
       service: "web-ui",
       time: "3h ago",
     },

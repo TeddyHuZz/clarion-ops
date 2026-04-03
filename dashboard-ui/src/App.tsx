@@ -6,7 +6,9 @@ function LandingPage() {
   return (
     <div className="landing-container">
       <nav className="landing-nav">
-        <div className="landing-logo">CLARION <span>OPS</span></div>
+        <div className="landing-logo">
+          CLARION <span>OPS</span>
+        </div>
         <div className="landing-nav__actions">
           <SignInButton mode="modal">
             <button className="btn-nav-signin">Sign In</button>
@@ -15,21 +17,22 @@ function LandingPage() {
       </nav>
 
       <section className="landing-hero">
-        <img 
-          src="/hero.png" 
-          alt="Intelligence Ops Infrastructure" 
-          className="landing-hero__bg" 
+        <img
+          src="/hero.png"
+          alt="Intelligence Ops Infrastructure"
+          className="landing-hero__bg"
         />
         <div className="landing-hero__overlay" />
-        
+
         <div className="landing-hero__content">
           <div className="landing-badge">Industry Standard DevSecOps</div>
           <h1 className="landing-title">
             Modern Command Center for Intelligent Ops.
           </h1>
           <p className="landing-subtitle">
-            Deploy with confidence. Monitor with precision. Secure your 
-            infrastructure with elite, data-driven intelligence tools designed for the modern stack.
+            Deploy with confidence. Monitor with precision. Secure your
+            infrastructure with elite, data-driven intelligence tools designed
+            for the modern stack.
           </p>
           <div className="landing-actions">
             <SignUpButton mode="modal">

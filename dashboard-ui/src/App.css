@@ -102,7 +102,11 @@ body {
   line-height: 1;
   margin-bottom: 2rem;
   letter-spacing: -0.04em;
-  background: linear-gradient(180deg, #ffffff 0%, var(--color-text-secondary) 100%);
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    var(--color-text-secondary) 100%
+  );
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

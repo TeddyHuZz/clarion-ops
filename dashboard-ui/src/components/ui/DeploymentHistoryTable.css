@@ -1,42 +1,47 @@
-.deployment-history {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-radius: 1.25rem;
-  overflow: hidden;
-}
-
-.deployment-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.deployment-table th {
-  padding: 1.25rem 1.5rem;
-  background: var(--bg-offset);
-  color: var(--text-muted);
+/* Risk Badge Styles (Shared with Dashboard) */
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 99px;
   font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border-bottom: 1px solid var(--surface-border);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.deployment-table td {
-  padding: 1.25rem 1.5rem;
-  color: var(--text);
-  font-size: 0.875rem;
-  border-bottom: 1px solid var(--surface-border);
-  vertical-align: middle;
+.risk-badge--low {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
-.deployment-table tr:last-child td {
-  border-bottom: none;
+.risk-badge--medium {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
-.deployment-table tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+.risk-badge--high {
+  background: #ef4444;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
 }
 
 .deployment-status {
@@ -48,6 +53,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
+  white-space: nowrap;
 }
 
 .status-success {
@@ -70,6 +76,15 @@
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
 }
+
+/* Column Layout Optimizations */
+.col-time { min-width: 120px; }
+.col-risk { min-width: 110px; }
+.col-service { min-width: 160px; }
+.col-branch { min-width: 120px; }
+.col-commit { min-width: 100px; }
+.col-author { min-width: 130px; }
+.col-status { width: 120px; }
 
 /* Skeleton Loading State */
 .skeleton-row td {

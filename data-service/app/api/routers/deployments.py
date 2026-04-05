@@ -60,6 +60,27 @@ async def list_deployments(
     """
     from sqlalchemy import select
     
-    query = select(DeploymentEvent).order_by(DeploymentEvent.time.desc()).limit(limit)
+    query = select(DeploymentEvent).order_by(DeploymentEvent.time.desc()).limit(20)
     result = await db.execute(query)
     return result.scalars().all()
+
+@router.patch("/{commit_hash}", response_model=dict)
+async def update_deployment_risk(
+    commit_hash: str,
+    risk_score: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Update the risk score for a specific deployment event by commit hash.
+    """
+    from sqlalchemy import update
+    
+    stmt = (
+        update(DeploymentEvent)
+        .where(DeploymentEvent.commit_hash == commit_hash)
+        .values(risk_score=risk_score)
+    )
+    await db.execute(stmt)
+    await db.commit()
+    
+    return {"status": "success", "commit_hash": commit_hash, "risk_score": risk_score}

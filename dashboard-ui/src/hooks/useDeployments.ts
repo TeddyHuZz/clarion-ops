@@ -8,6 +8,7 @@ export interface Deployment {
   author: string;
   branch: string;
   status: string;
+  risk_score?: number;
 }
 
 export const useDeployments = () => {

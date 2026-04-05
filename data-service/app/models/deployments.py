@@ -11,9 +11,10 @@ class DeploymentEvent(Base):
     service_name: Mapped[str] = mapped_column(String, primary_key=True)
     
     commit_hash: Mapped[str] = mapped_column(String, nullable=False)
-    author: Mapped[str] = mapped_column(String, nullable=False)
-    branch: Mapped[str] = mapped_column(String, nullable=False)
-    status: Mapped[str] = mapped_column(String, nullable=False)
+    author: Mapped[str] = mapped_column(Text, nullable=False)
+    branch: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False)
+    risk_score: Mapped[Optional[int]] = mapped_column(Integer, default=0)
 
     def __repr__(self) -> str:
         return f"<DeploymentEvent(service={self.service_name}, status={self.status}, time={self.time})>"

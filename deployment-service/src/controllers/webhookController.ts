@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { reportDeployment } from '../services/dataClient.js';
+import { RiskScoringEngine } from '../services/RiskScoringEngine.js';
 
 /**
  * Controller for GitHub Webhooks.
@@ -15,37 +16,35 @@ export const handleGithubWebhook = async (req: Request, res: Response) => {
 
     // 1. Respond 200 OK immediately to satisfy GitHub's delivery requirements
     res.status(200).json({ status: 'Accepted' });
-
-    // 2. Filter for 'workflow_run' events specifically
-    if (eventType !== 'workflow_run') {
-      return;
-    }
-
-    const { workflow_run, repository } = payload;
-    if (!workflow_run || !repository) {
-      console.warn('[webhook]: Malformed payload received (missing workflow_run or repository).');
-      return;
-    }
-
-    // 3. Extract metadata per requirement
-    const deploymentData = {
-      service_name: repository.name,
-      commit_hash: workflow_run.head_sha,
-      author: workflow_run.actor?.login || 'unknown',
-      branch: workflow_run.head_branch,
-      status: workflow_run.conclusion || 'pending',
-      time: new Date().toISOString()
+    
+    // 1. Extract GitHub Actions Webhook Metadata
+    const data = {
+      time: new Date().toISOString(),
+      service_name: payload.repository?.name || 'unknown',
+      commit_hash: payload.workflow_run?.head_sha || 'unknown',
+      author: payload.workflow_run?.actor?.login || 'unknown',
+      branch: payload.workflow_run?.head_branch || 'unknown',
+      status: payload.workflow_run?.conclusion?.toUpperCase() || 'UNKNOWN'
     };
 
-    console.log(`[webhook]: Processing deployment event for ${deploymentData.service_name} (${deploymentData.status}).`);
+    // 2. Respond to GitHub Immediately (GitHub Expects < 10s)
+    res.status(200).send('Webhook Received');
 
-    // 4. Asynchronously relay to the Data Service (non-blocking)
-    reportDeployment(deploymentData).catch(err => {
-      console.error('[webhook]: Background relay failed:', err);
-    });
+    // 3. Process Asynchronously: Persistent Audit & Risk Calculation
+    (async () => {
+      try {
+        await reportDeployment(data);
+        console.log(`[Webhook]: Deployment reported: ${data.commit_hash}`);
+        
+        // Trigger Risk Assessment
+        await RiskScoringEngine.calculateRiskScore(data.commit_hash);
+      } catch (err) {
+        console.error('[Webhook]: Asynchronous Relay Failure:', err);
+      }
+    })();
 
   } catch (error) {
-    console.error('[webhook]: Critical failure in webhook handler:', error);
-    // Note: We've likely already responded 200 to GitHub by this point
+    console.error('[GitHub Webhook]: Parsing Error:', error);
+    res.status(400).send('Invalid Webhook Payload');
   }
 };

@@ -27,6 +27,8 @@ import { useState } from "react";
 import { useMetrics } from "../hooks/useMetrics";
 import { MetricChart } from "./ui/MetricChart";
 import { PodHealthTable } from "./ui/PodHealthTable";
+import { SlaCard } from "./ui/SlaCard";
+import { DependencyMap } from "./ui/DependencyMap";
 
 export function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,11 +37,9 @@ export function Dashboard() {
     memoryUsage, memoryHistory,
     diskIO, 
     networkIO, 
-    health, 
-    loading, 
-    error, 
+    health, sla, loading, error, 
     refetch 
-  } = useMetrics("test-ns", "test-pod");
+  } = useMetrics("test-pod");
 
   // Helper to format bytes
   const formatBytes = (bytes: number | undefined) => {
@@ -151,6 +151,7 @@ export function Dashboard() {
 
         {/* Stats Grid */}
         <div className="dashboard-grid">
+          <SlaCard sla={sla} loading={loading} />
           <StatCard
             label="CPU Load"
             value={loading && cpuHistory.length === 0 ? "..." : cpuLoad !== null ? `${cpuLoad.toFixed(1)}%` : "N/A"}
@@ -206,6 +207,15 @@ export function Dashboard() {
             status: health.state,
             restartCount: health.restarts
           }] : []} />
+        </section>
+
+        {/* Service Topology Map */}
+        <section className="dashboard-section" style={{ marginBottom: '40px' }}>
+          <div className="dashboard-section__header">
+            <h2>Service Topology</h2>
+            <Badge>Dynamic Overlay</Badge>
+          </div>
+          <DependencyMap />
         </section>
 
         {/* Simple Modal remains for demonstration */}

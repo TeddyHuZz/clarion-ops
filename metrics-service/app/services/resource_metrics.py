@@ -43,8 +43,19 @@ def _extract_value(response: dict[str, Any]) -> float | None:
         return None
 
 
+async def is_target_up(namespace: str) -> bool:
+    """Check if the metrics target for a namespace is currently reachable."""
+    client = PrometheusClient.get_instance()
+    # Query 'up' metric for the namespace
+    response = await client.query_prometheus(f'up{{namespace="{namespace}"}} == 1')
+    result = response.get("data", {}).get("result", [])
+    return len(result) > 0
+
 async def get_cpu_usage(namespace: str, pod: str) -> MetricResult:
     """Fetch CPU usage in cores (5-minute average rate)."""
+    if not await is_target_up(namespace):
+        return MetricResult(value=None, query="GATED: target down", timestamp=None)
+        
     client = PrometheusClient.get_instance()
     query = _CPU_QUERY.format(namespace=namespace, pod=pod)
     
@@ -57,6 +68,9 @@ async def get_cpu_usage(namespace: str, pod: str) -> MetricResult:
 
 async def get_memory_usage(namespace: str, pod: str) -> MetricResult:
     """Fetch memory working set bytes."""
+    if not await is_target_up(namespace):
+        return MetricResult(value=None, query="GATED: target down", timestamp=None)
+        
     client = PrometheusClient.get_instance()
     query = _MEMORY_QUERY.format(namespace=namespace, pod=pod)
     
@@ -69,6 +83,10 @@ async def get_memory_usage(namespace: str, pod: str) -> MetricResult:
 
 async def get_disk_io(namespace: str, pod: str) -> dict[str, MetricResult]:
     """Fetch disk read/write throughput in bytes/sec."""
+    if not await is_target_up(namespace):
+        empty = MetricResult(value=None, query="GATED: target down", timestamp=None)
+        return {"read_bytes_sec": empty, "write_bytes_sec": empty}
+        
     client = PrometheusClient.get_instance()
     
     read_query = _DISK_READ_QUERY.format(namespace=namespace, pod=pod)
@@ -93,6 +111,10 @@ async def get_disk_io(namespace: str, pod: str) -> dict[str, MetricResult]:
 
 async def get_network_io(namespace: str, pod: str) -> dict[str, MetricResult]:
     """Fetch network receive/transmit throughput in bytes/sec."""
+    if not await is_target_up(namespace):
+        empty = MetricResult(value=None, query="GATED: target down", timestamp=None)
+        return {"receive_bytes_sec": empty, "transmit_bytes_sec": empty}
+        
     client = PrometheusClient.get_instance()
     
     rx_query = _NET_RX_QUERY.format(namespace=namespace, pod=pod)
@@ -164,14 +186,19 @@ async def get_pod_health(namespace: str) -> list[dict[str, Any]]:
         
     return list(pod_health.values())
     
-async def get_namespace_sla(namespace: str) -> MetricResult:
-    """Calculate the 30-day uptime SLA for all services in a namespace."""
+async def get_namespace_sla(namespace: str, window: str = "5m") -> MetricResult:
+    """Calculate the uptime SLA for all services in a namespace over a given window."""
     client = PrometheusClient.get_instance()
-    # Using avg_over_time to get the historical uptime percentage
-    query = f'avg_over_time(up{{namespace="{namespace}"}}[30d]) * 100'
+    # Using the standard Prometheus 'up' metric which is guaranteed to be 0 when unreachable
+    query = f'avg_over_time(up{{namespace="{namespace}"}}[{window}]) * 100'
     
     response = await client.query_prometheus(query)
+    results = response.get("data", {}).get("result", [])
+    
+    if not results:
+        return MetricResult(value=0.0, query=query, timestamp=None)
+        
     value = _extract_value(response)
-    timestamp = response.get("data", {}).get("result", [{}])[0].get("value", [None])[0]
+    timestamp = results[0].get("value", [None])[0]
     
     return MetricResult(value=value, query=query, timestamp=float(timestamp) if timestamp else None)

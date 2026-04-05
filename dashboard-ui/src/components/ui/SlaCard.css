@@ -1,0 +1,88 @@
+.sla-card {
+  background: var(--card-bg, rgba(30, 41, 59, 0.7));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 240px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.sla-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sla-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sla-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sla-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 0.25rem;
+}
+
+.sla-footer {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: auto;
+}
+
+/* Status Colors */
+.sla-status-excellent {
+  color: #10b981; /* Green 500 */
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+.sla-status-warning {
+  color: #f59e0b; /* Yellow 500 */
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.sla-status-critical {
+  color: #ef4444; /* Red 500 */
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+/* Skeleton Loading */
+.sla-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+.sla-skeleton-value {
+  height: 2.5rem;
+  width: 140px;
+}
+
+.sla-skeleton-title {
+  height: 1rem;
+  width: 100px;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

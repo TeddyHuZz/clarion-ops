@@ -11,6 +11,7 @@ from app.services.resource_metrics import (
     get_disk_io,
     get_network_io,
     get_pod_health,
+    get_namespace_sla,
     MetricResult,
 )
 
@@ -139,3 +140,17 @@ async def get_pod_restarts(
         ]
     except Exception as e:
         await _handle_metric_error("Pod Restarts", e)
+
+@router.get("/sla")
+async def get_sla(
+    namespace: str = Query(..., description="Kubernetes namespace"),
+    window: str = Query("5m", description="Time window (e.g., 5m, 1h, 30d)"),
+):
+    """Get the uptime SLA percentage for a namespace over a given window."""
+    try:
+      result = await get_namespace_sla(namespace, window)
+      if result.value is None:
+        return 0.0
+      return round(result.value, 2)
+    except Exception as e:
+        await _handle_metric_error("SLA", e)

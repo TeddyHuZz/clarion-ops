@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Globe, ChevronDown, Server } from "lucide-react";
 import "./EnvironmentSwitcher.css";
-
-export type Environment = "dev" | "staging" | "production";
+import { useEnvironment } from "../contexts/EnvironmentContext";
+import type { Environment } from "../contexts/EnvironmentContext";
 
 interface EnvironmentConfig {
   key: Environment;
@@ -25,39 +25,20 @@ const ENVIRONMENTS: EnvironmentConfig[] = [
     dotColor: "#fbbf24" 
   },
   { 
-    key: "production", 
+    key: "prod", 
     label: "Production", 
     color: "env-switcher--production", 
     dotColor: "#f87171" 
   },
 ];
 
-function getStoredEnvironment(): Environment {
-  const stored = localStorage.getItem("clarion-ops-environment");
-  if (stored && ["dev", "staging", "production"].includes(stored)) {
-    return stored as Environment;
-  }
-  return "dev";
-}
-
-interface EnvironmentSwitcherProps {
-  onChange?: (env: Environment) => void;
-}
-
-export function EnvironmentSwitcher({ onChange }: EnvironmentSwitcherProps) {
+export function EnvironmentSwitcher() {
+  const { currentEnv, setEnv } = useEnvironment();
   const [isOpen, setIsOpen] = useState(false);
-  const [currentEnv, setCurrentEnv] = useState<Environment>(getStoredEnvironment);
-
-  useEffect(() => {
-    const stored = getStoredEnvironment();
-    setCurrentEnv(stored);
-  }, []);
 
   const handleSelect = (env: Environment) => {
-    setCurrentEnv(env);
-    localStorage.setItem("clarion-ops-environment", env);
+    setEnv(env);
     setIsOpen(false);
-    onChange?.(env);
   };
 
   const activeConfig = ENVIRONMENTS.find(e => e.key === currentEnv)!;

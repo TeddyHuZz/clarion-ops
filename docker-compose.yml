@@ -1,0 +1,76 @@
+services:
+  # 1. Metrics Source Configuration
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./metrics-service/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - clarion-net
+
+  mock-exporter:
+    build:
+      context: ./metrics-service
+      dockerfile_inline: |
+        FROM python:3.12-slim
+        RUN pip install prometheus-client
+        COPY tests/mock_metrics_exporter.py .
+        CMD ["python", "mock_metrics_exporter.py"]
+    container_name: mock-exporter
+    ports:
+      - "8000:8000"
+    networks:
+      - clarion-net
+
+  # 2. Functional Microservices
+  metrics-service:
+    build:
+      context: ./metrics-service
+      dockerfile: Dockerfile
+    container_name: metrics-service
+    ports:
+      - "8001:8001"
+    environment:
+      - PROMETHEUS_URL=http://prometheus:9090
+      - LOG_LEVEL=debug
+    depends_on:
+      - prometheus
+    networks:
+      - clarion-net
+
+  data-service:
+    build:
+      context: ./data-service
+      dockerfile: Dockerfile
+    container_name: data-service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://admin:secret@timescaledb:5432/guardian_data
+      - INTERNAL_API_KEY=dev-internal-secret-key
+    depends_on:
+      - timescaledb
+      - metrics-service
+    networks:
+      - clarion-net
+
+  # 3. Persistence Layer
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: timescaledb
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=guardian_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data-service/sql/init_metrics.sql:/docker-entrypoint-initdb.d/init_metrics.sql
+    networks:
+      - clarion-net
+
+networks:
+  clarion-net:
+    driver: bridge

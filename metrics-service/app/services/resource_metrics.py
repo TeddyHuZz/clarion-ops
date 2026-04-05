@@ -163,3 +163,15 @@ async def get_pod_health(namespace: str) -> list[dict[str, Any]]:
         entry["restarts"] = int(float(val[1])) if len(val) >= 2 else 0
         
     return list(pod_health.values())
+    
+async def get_namespace_sla(namespace: str) -> MetricResult:
+    """Calculate the 30-day uptime SLA for all services in a namespace."""
+    client = PrometheusClient.get_instance()
+    # Using avg_over_time to get the historical uptime percentage
+    query = f'avg_over_time(up{{namespace="{namespace}"}}[30d]) * 100'
+    
+    response = await client.query_prometheus(query)
+    value = _extract_value(response)
+    timestamp = response.get("data", {}).get("result", [{}])[0].get("value", [None])[0]
+    
+    return MetricResult(value=value, query=query, timestamp=float(timestamp) if timestamp else None)

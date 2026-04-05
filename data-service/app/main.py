@@ -33,6 +33,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from .api.routers import deployments
+
+app.include_router(
+    deployments.router,
+    prefix="/api/v1/deployments",
+    tags=["Deployments"]
+)
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     """

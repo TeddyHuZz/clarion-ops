@@ -33,12 +33,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from .api.routers import deployments
+from .api.routers import deployments, security
 
 app.include_router(
     deployments.router,
     prefix="/api/v1/deployments",
     tags=["Deployments"]
+)
+
+app.include_router(
+    security.router,
+    prefix="/api/v1/security",
+    tags=["Security"]
 )
 
 @app.get("/health", tags=["Health"])

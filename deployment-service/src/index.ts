@@ -22,7 +22,16 @@ app.use(express.json());
 
 // Routes
 import { handleGithubWebhook } from './controllers/webhookController.js';
+import { handleTrivyWebhook } from './controllers/securityController.js';
+import { getRecentDeployments } from './services/dataQuery.js';
+
 app.post('/webhooks/github', handleGithubWebhook);
+app.post('/webhooks/trivy', handleTrivyWebhook);
+
+app.get('/deployments', async (_req: Request, res: Response) => {
+  const deployments = await getRecentDeployments();
+  res.json(deployments);
+});
 
 // Health Check
 app.get('/health', (_req: Request, res: Response) => {

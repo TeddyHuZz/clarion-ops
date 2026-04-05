@@ -49,3 +49,17 @@ async def create_deployment_event(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to record deployment: {str(e)}"
         )
+
+@router.get("/", response_model=list)
+async def list_deployments(
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retrieve the most recent deployment events from TimescaleDB.
+    """
+    from sqlalchemy import select
+    
+    query = select(DeploymentEvent).order_by(DeploymentEvent.time.desc()).limit(limit)
+    result = await db.execute(query)
+    return result.scalars().all()

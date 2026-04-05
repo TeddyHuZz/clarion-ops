@@ -1,0 +1,163 @@
+.cve-results {
+  background: rgba(0, 0, 0, 0.2);
+  margin: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+  animation: slide-down 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cve-header {
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--surface-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.cve-header__left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cve-filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.filter-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.filter-btn--active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.filter-btn--critical.filter-btn--active {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+.filter-btn--high.filter-btn--active {
+  border-color: rgba(249, 115, 22, 0.6);
+  background: rgba(249, 115, 22, 0.1);
+  color: #fb923c;
+}
+
+.cve-header h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cve-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.cve-item {
+  display: grid;
+  grid-template-columns: 140px 1fr 140px 120px;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  align-items: center;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
+}
+
+.cve-item:last-child {
+  border-bottom: none;
+}
+
+.cve-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cve-id {
+  font-family: 'JetBrains Mono', monospace;
+  color: #8de3ff;
+  font-weight: 600;
+}
+
+.cve-package {
+  color: var(--text);
+  opacity: 0.9;
+}
+
+.cve-version {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.severity-pill {
+  display: inline-flex;
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+.severity-critical {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.severity-high {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.severity-medium {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.cve-loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.cve-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

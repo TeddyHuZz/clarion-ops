@@ -41,3 +41,36 @@ export const reportDeployment = async (payload: DeploymentPayload): Promise<void
     console.error('[data-client]: Connectivity error when reaching data-service:', error);
   }
 };
+
+/**
+ * Sends a bulk list of CVE scan results to the data-service.
+ * Optimized for container security scanners (Trivy).
+ */
+export const bulkReportCVEs = async (payloads: DeploymentPayload[]): Promise<void> => {
+  if (payloads.length === 0) return;
+
+  const SECURITY_INGEST_URL = (process.env['DATA_SERVICE_URL'] || 'http://localhost:8002/api/v1/') + 'security/scans';
+
+  try {
+    console.log(`[data-client]: Relaying bulk CVE report (${payloads.length} entries) to data-service...`);
+    
+    const response = await fetch(SECURITY_INGEST_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payloads),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[data-client]: Bulk CVE relay failed. Status: ${response.status}. Error: ${errorText}`);
+      return;
+    }
+
+    const result = await response.json();
+    console.log(`[data-client]: Bulk ingestion successful. Records stored: ${result.records_ingested}`);
+  } catch (error) {
+    console.error('[data-client]: Connectivity error during bulk CVE relay:', error);
+  }
+};

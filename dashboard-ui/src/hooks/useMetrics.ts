@@ -27,6 +27,8 @@ export interface PodHealth {
   restarts: number;
 }
 
+const MAX_HISTORY = 30; // Number of points to keep for charts
+
 export function useMetrics(namespace: string, podName: string, pollInterval: number = 5000) {
   const [cpuLoad, setCpuLoad] = useState<number | null>(null);
   const [memoryUsage, setMemoryUsage] = useState<number | null>(null);
@@ -36,9 +38,12 @@ export function useMetrics(namespace: string, podName: string, pollInterval: num
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // History buffers for charts
+  const [cpuHistory, setCpuHistory] = useState<MetricDataPoint[]>([]);
+  const [memoryHistory, setMemoryHistory] = useState<MetricDataPoint[]>([]);
+
   const fetchMetrics = useCallback(async () => {
     try {
-      // Parallel fetch for efficiency
       const [cpuResp, memResp, diskResp, netResp, healthResp] = await Promise.all([
         fetch(`${API_BASE_URL}/cpu?namespace=${namespace}&pod_name=${podName}`),
         fetch(`${API_BASE_URL}/memory?namespace=${namespace}&pod_name=${podName}`),
@@ -55,39 +60,34 @@ export function useMetrics(namespace: string, podName: string, pollInterval: num
         cpuResp.json(), memResp.json(), diskResp.json(), netResp.json(), healthResp.json()
       ]);
 
-      // CPU
-      if (cpuData.length > 0) setCpuLoad(cpuData[0].value * 100);
-      else setCpuLoad(null);
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-      // Memory (bytes to MB)
-      if (memData.length > 0) setMemoryUsage(memData[0].value / (1024 * 1024));
-      else setMemoryUsage(null);
+      // Process CPU
+      if (cpuData.length > 0) {
+        const value = cpuData[0].value * 100;
+        setCpuLoad(value);
+        setCpuHistory(prev => [...prev.slice(-(MAX_HISTORY - 1)), { timestamp: now, value }]);
+      }
 
-      // Disk
-      if (diskData.length > 0) setDiskIO(diskData[0]);
-      else setDiskIO(null);
+      // Process Memory
+      if (memData.length > 0) {
+        const value = memData[0].value / (1024 * 1024);
+        setMemoryUsage(value);
+        setMemoryHistory(prev => [...prev.slice(-(MAX_HISTORY - 1)), { timestamp: now, value }]);
+      }
 
-      // Network
-      if (netData.length > 0) setNetworkIO(netData[0]);
-      else setNetworkIO(null);
+      // Disk & Network (Single points for now)
+      setDiskIO(diskData.length > 0 ? diskData[0] : null);
+      setNetworkIO(netData.length > 0 ? netData[0] : null);
 
       // Health
       const podInfo = healthData.find((h: PodHealth) => h.pod === podName);
-      if (podInfo) {
-        setHealth(podInfo);
-        setError(null);
-      } else {
-        setHealth(null);
-        setError(`Pod ${podName} not found`);
-      }
+      setHealth(podInfo || null);
+      if (!podInfo) setError(`Pod ${podName} not found`);
+      else setError(null);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fetch error');
-      setCpuLoad(null);
-      setMemoryUsage(null);
-      setDiskIO(null);
-      setNetworkIO(null);
-      setHealth(null);
     } finally {
       setLoading(false);
     }
@@ -99,5 +99,11 @@ export function useMetrics(namespace: string, podName: string, pollInterval: num
     return () => clearInterval(interval);
   }, [fetchMetrics, pollInterval]);
 
-  return { cpuLoad, memoryUsage, diskIO, networkIO, health, loading, error, refetch: fetchMetrics };
+  return { 
+    cpuLoad, cpuHistory,
+    memoryUsage, memoryHistory,
+    diskIO, networkIO, 
+    health, loading, error, 
+    refetch: fetchMetrics 
+  };
 }

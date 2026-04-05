@@ -18,7 +18,6 @@ import { SignOutButton, UserButton } from "@clerk/react";
 import "./Dashboard.css";
 import { 
   StatCard, 
-  Card, 
   Button, 
   Badge, 
   Modal 
@@ -26,12 +25,14 @@ import {
 import { EnvironmentSwitcher } from "./EnvironmentSwitcher";
 import { useState } from "react";
 import { useMetrics } from "../hooks/useMetrics";
+import { MetricChart } from "./ui/MetricChart";
+import { PodHealthTable } from "./ui/PodHealthTable";
 
 export function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { 
-    cpuLoad, 
-    memoryUsage, 
+    cpuLoad, cpuHistory,
+    memoryUsage, memoryHistory,
     diskIO, 
     networkIO, 
     health, 
@@ -40,7 +41,7 @@ export function Dashboard() {
     refetch 
   } = useMetrics("test-ns", "test-pod");
 
-  // Helper to format bytes (e.g. for network/disk)
+  // Helper to format bytes
   const formatBytes = (bytes: number | undefined) => {
     if (bytes === undefined || bytes === null) return "0 B/s";
     if (bytes < 1024) return `${bytes.toFixed(1)} B/s`;
@@ -148,91 +149,81 @@ export function Dashboard() {
           </div>
         </header>
 
-        {/* Stats Grid - Now all using real data */}
+        {/* Stats Grid */}
         <div className="dashboard-grid">
           <StatCard
             label="CPU Load"
-            value={loading ? "..." : cpuLoad !== null ? `${cpuLoad.toFixed(1)}%` : "N/A"}
+            value={loading && cpuHistory.length === 0 ? "..." : cpuLoad !== null ? `${cpuLoad.toFixed(1)}%` : "N/A"}
             icon={<Activity />}
             trend={error ? { value: "Error", positive: false } : { value: "Live", positive: true }}
           />
           <StatCard
             label="Memory Usage"
-            value={loading ? "..." : memoryUsage !== null ? `${memoryUsage.toFixed(0)} MB` : "N/A"}
+            value={loading && memoryHistory.length === 0 ? "..." : memoryUsage !== null ? `${memoryUsage.toFixed(0)} MB` : "N/A"}
             icon={<Database />}
             trend={{ value: "Stable", positive: true }}
           />
           <StatCard
             label="Network Inbound"
-            value={loading ? "..." : formatBytes(networkIO?.receive_bytes_sec)}
+            value={loading && !networkIO ? "..." : formatBytes(networkIO?.receive_bytes_sec)}
             icon={<Globe />}
             trend={{ value: "Active", positive: true }}
           />
           <StatCard
             label="Disk Throughput"
-            value={loading ? "..." : formatBytes((diskIO?.read_bytes_sec || 0) + (diskIO?.write_bytes_sec || 0))}
+            value={loading && !diskIO ? "..." : formatBytes((diskIO?.read_bytes_sec || 0) + (diskIO?.write_bytes_sec || 0))}
             icon={<Zap />}
             trend={{ value: "I/O", positive: true }}
           />
         </div>
 
-        {/* Alerts Section - Cleaned up to show empty state */}
+        {/* Resource Intelligence Grid - Graphs */}
+        <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))' }}>
+          <MetricChart 
+            title="CPU Load History" 
+            data={cpuHistory} 
+            dataKey="value" 
+            color="#8de3ff" 
+            unit="%"
+          />
+          <MetricChart 
+            title="Memory Usage Trends" 
+            data={memoryHistory} 
+            dataKey="value" 
+            color="#c9ada7" 
+            unit="MB"
+          />
+        </div>
+
+        {/* Pod Inventory Table */}
         <section className="dashboard-section">
           <div className="dashboard-section__header">
-            <h2>Recent Security Alerts</h2>
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsModalOpen(true)}
-              style={{ color: "var(--accent)", fontWeight: 600 }}
-            >
-              View History
+            <h2>Active Pod Inventory</h2>
+            <Badge variant="success">Synchronized</Badge>
+          </div>
+          <PodHealthTable pods={health ? [{
+            name: health.pod,
+            status: health.state,
+            restartCount: health.restarts
+          }] : []} />
+        </section>
+
+        {/* Simple Modal remains for demonstration */}
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          title="Security Audit Log"
+          footer={
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+              Close Audit Log
             </Button>
-          </div>
-
-          <Card padding="0">
-            <div className="dashboard-table-container">
-              <div style={{ 
-                padding: '48px', 
-                textAlign: 'center', 
-                color: 'var(--text-muted)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <Shield size={48} style={{ opacity: 0.1, marginBottom: '8px' }} />
-                <h3 style={{ color: 'var(--text-primary)' }}>No active alerts detected</h3>
-                <p style={{ fontSize: '0.9rem', maxWidth: '300px' }}>
-                  The <code>alert-service</code> is currently idle or disconnected. Monitor resource metrics above for anomalies.
-                </p>
-                <div style={{ marginTop: '16px' }}>
-                  <Badge variant="warning">Connection Pending</Badge>
-                </div>
-              </div>
-          </div>
-        </Card>
-      </section>
-
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Security Audit Log"
-        footer={
-          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-            Close Audit Log
-          </Button>
-        }
-      >
-        <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
-          This log will populate once the <code>alert-service</code> and <code>data-service</code> are fully integrated into the control plane.
-        </p>
-        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
-          <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-            System ready. Waiting for initial vulnerability scan data...
+          }
+        >
+          <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
+            System ready. Dashboard fully synchronized with metrics gateway.
           </p>
-        </div>
-      </Modal>
-    </main>
-  </div>
-);
+        </Modal>
+      </main>
+    </div>
+  );
 }

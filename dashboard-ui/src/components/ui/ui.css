@@ -147,3 +147,85 @@
   justify-content: flex-end;
   gap: 12px;
 }
+
+/* Chart System */
+.ui-chart-container {
+  width: 100%;
+  height: 300px;
+  padding: 24px;
+}
+
+.ui-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.ui-chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ui-chart-tooltip {
+  background: var(--bg-offset) !important;
+  border: 1px solid var(--surface-border) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(8px);
+  padding: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.ui-chart-tooltip-label {
+  color: var(--text-muted) !important;
+  font-size: 0.8rem !important;
+  margin-bottom: 4px;
+}
+
+/* Table System Improvements */
+.ui-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ui-table th {
+  padding: 16px 24px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.ui-table td {
+  padding: 16px 24px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--surface-border);
+  vertical-align: middle;
+}
+
+.ui-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ui-text-critical {
+  color: #fb7185; /* matches ui-badge--error */
+  font-weight: 600;
+}
+
+.ui-empty-state {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}

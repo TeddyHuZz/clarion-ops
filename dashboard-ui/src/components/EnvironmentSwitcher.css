@@ -1,0 +1,144 @@
+.env-switcher {
+  position: relative;
+  display: inline-block;
+}
+
+.env-switcher__trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
+}
+
+.env-switcher__trigger:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.env-switcher__trigger::before {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--env-dot, #22d3ee);
+  box-shadow: 0 0 6px var(--env-dot, #22d3ee);
+}
+
+.env-switcher__label {
+  white-space: nowrap;
+}
+
+.env-switcher__chevron {
+  opacity: 0.5;
+  transition: transform 0.2s ease;
+}
+
+.env-switcher__chevron--open {
+  transform: rotate(180deg);
+}
+
+.env-switcher__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+.env-switcher__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-offset);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 180px;
+  z-index: 1000;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  animation: env-dropdown-in 0.15s ease-out;
+}
+
+@keyframes env-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.env-switcher__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.env-switcher__option::before {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--env-dot, #22d3ee);
+  opacity: 0.6;
+}
+
+.env-switcher__option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.env-switcher__option--active {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.env-switcher__option--active::before {
+  opacity: 1;
+  box-shadow: 0 0 6px var(--env-dot, #22d3ee);
+}
+
+.env-switcher__checkmark {
+  margin-left: auto;
+  color: var(--env-dot, #22d3ee);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Environment-specific dot colors */
+.env-switcher--dev {
+  --env-dot: #22d3ee;
+}
+
+.env-switcher--staging {
+  --env-dot: #fbbf24;
+}
+
+.env-switcher--production {
+  --env-dot: #f87171;
+}

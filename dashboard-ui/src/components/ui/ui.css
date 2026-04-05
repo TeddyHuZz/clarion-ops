@@ -1,0 +1,149 @@
+/* Base Card Shell */
+.ui-card {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 24px;
+  backdrop-filter: blur(var(--glass-blur));
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.ui-card--interactive:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-muted);
+}
+
+/* Button System */
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.ui-button--primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.ui-button--primary:hover {
+  filter: brightness(1.1);
+}
+
+.ui-button--secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--surface-border);
+}
+
+.ui-button--secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-muted);
+}
+
+.ui-button--ghost {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+}
+
+.ui-button--ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.ui-button--icon {
+  padding: 10px;
+}
+
+/* Badge System */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ui-badge--error {
+  background: rgba(251, 113, 133, 0.1);
+  color: #fb7185;
+}
+
+.ui-badge--warning {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+}
+
+.ui-badge--success {
+  background: rgba(141, 227, 255, 0.1);
+  color: #8de3ff;
+}
+
+/* Trend Badge Variant */
+.ui-badge--trend {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+/* Modal Shell */
+.ui-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.ui-modal {
+  width: 100%;
+  max-width: 500px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 28px;
+  backdrop-filter: blur(40px);
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.ui-modal__header {
+  padding: 32px 32px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.ui-modal__content {
+  padding: 24px 32px 32px;
+}
+
+.ui-modal__footer {
+  padding: 20px 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--surface-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}

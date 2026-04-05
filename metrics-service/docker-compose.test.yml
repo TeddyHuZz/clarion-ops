@@ -1,0 +1,43 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-dev
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - metrics-net
+
+  mock-exporter:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM python:3.12-slim
+        RUN pip install prometheus-client
+        COPY tests/mock_metrics_exporter.py .
+        CMD ["python", "mock_metrics_exporter.py"]
+    container_name: mock-exporter
+    ports:
+      - "8000:8000"
+    networks:
+      - metrics-net
+
+  metrics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: metrics-service
+    ports:
+      - "8001:8001"
+    environment:
+      - PROMETHEUS_URL=http://prometheus:9090
+      - LOG_LEVEL=debug
+    depends_on:
+      - prometheus
+    networks:
+      - metrics-net
+
+networks:
+  metrics-net:
+    driver: bridge

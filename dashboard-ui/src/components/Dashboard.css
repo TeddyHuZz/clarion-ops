@@ -88,22 +88,7 @@
   gap: 24px;
 }
 
-.dashboard-card {
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-radius: 24px;
-  padding: 24px;
-  backdrop-filter: blur(var(--glass-blur));
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: transform 0.2s ease;
-}
-
-.dashboard-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--accent-muted);
-}
+/* Card layouts are now handled by .ui-card in ui.css */
 
 .dashboard-card__header {
   display: flex;
@@ -134,22 +119,7 @@
   font-weight: 500;
 }
 
-.dashboard-card__trend {
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.dashboard-card__trend--up {
-  color: #8de3ff;
-  background: rgba(141, 227, 255, 0.1);
-}
-
-.dashboard-card__trend--down {
-  color: #fb7185;
-  background: rgba(251, 113, 133, 0.1);
-}
+/* Trend badges are now handled by .ui-badge in ui.css */
 
 .dashboard-section {
   display: flex;
@@ -163,22 +133,36 @@
   align-items: center;
 }
 
+.dashboard-header__search {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 10px 16px 10px 40px;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.dashboard-header__search:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-header__search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.4;
+}
+
 .dashboard-section__header h2 {
   font-size: 1.25rem;
   font-weight: 600;
 }
 
-.dashboard-table-card {
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  border-radius: 24px;
-  backdrop-filter: blur(var(--glass-blur));
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease;
-  padding: 0;
-  overflow: hidden;
-}
+/* Table card is now handled by .ui-card in ui.css */
 
 .dashboard-table {
   width: 100%;
@@ -205,30 +189,35 @@
   border-bottom: none;
 }
 
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-badge--success {
-  background: rgba(141, 227, 255, 0.1);
-  color: #8de3ff;
-}
-
-.status-badge--warning {
-  background: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
-}
-
-.status-badge--error {
-  background: rgba(251, 113, 133, 0.1);
-  color: #fb7185;
-}
+/* Status badges are now handled by .ui-badge in ui.css */
 
 @media (max-width: 1024px) {
   .dashboard-sidebar {
     display: none;
   }
+}
+
+/* Environment Switcher header layout */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dashboard-header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dashboard-header__actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.dashboard-header__search-wrapper {
+  position: relative;
 }

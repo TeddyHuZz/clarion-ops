@@ -10,77 +10,43 @@ import {
   LogOut,
   Search,
   Bell,
-  ArrowUpRight,
-  ArrowDownRight,
-  CheckCircle2,
+  Database,
+  Globe,
+  RefreshCcw,
 } from "lucide-react";
-import "./Dashboard.css";
 import { SignOutButton, UserButton } from "@clerk/react";
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  trend?: { value: string; positive: boolean };
-}
-
-function StatCard({ label, value, icon, trend }: StatCardProps) {
-  return (
-    <div className="dashboard-card">
-      <div className="dashboard-card__header">
-        <div className="dashboard-card__icon">{icon}</div>
-        {trend && (
-          <span
-            className={`dashboard-card__trend ${trend.positive ? "dashboard-card__trend--up" : "dashboard-card__trend--down"}`}
-          >
-            {trend.positive ? (
-              <ArrowUpRight size={14} />
-            ) : (
-              <ArrowDownRight size={14} />
-            )}
-            {trend.value}
-          </span>
-        )}
-      </div>
-      <div>
-        <div className="dashboard-card__value">{value}</div>
-        <div className="dashboard-card__label">{label}</div>
-      </div>
-    </div>
-  );
-}
+import "./Dashboard.css";
+import { 
+  StatCard, 
+  Card, 
+  Button, 
+  Badge, 
+  Modal 
+} from "./ui";
+import { EnvironmentSwitcher } from "./EnvironmentSwitcher";
+import { useState } from "react";
+import { useMetrics } from "../hooks/useMetrics";
 
 export function Dashboard() {
-  const alerts = [
-    {
-      id: 1,
-      title: "SQL Injection attempt detected",
-      severity: "high",
-      service: "auth-service",
-      time: "2m ago",
-    },
-    {
-      id: 2,
-      title: "Dependency vulnerability found",
-      severity: "medium",
-      service: "api-gateway",
-      time: "15m ago",
-    },
-    {
-      id: 3,
-      title: "Unauthorized access blocked",
-      severity: "high",
-      service: "db-proxy",
-      time: "1h ago",
-    },
-    {
-      id: 4,
-      title: "Pipeline linting failed",
-      severity: "low",
-      service: "web-ui",
-      time: "3h ago",
-    },
-  ];
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { 
+    cpuLoad, 
+    memoryUsage, 
+    diskIO, 
+    networkIO, 
+    health, 
+    loading, 
+    error, 
+    refetch 
+  } = useMetrics("test-ns", "test-pod");
+
+  // Helper to format bytes (e.g. for network/disk)
+  const formatBytes = (bytes: number | undefined) => {
+    if (bytes === undefined || bytes === null) return "0 B/s";
+    if (bytes < 1024) return `${bytes.toFixed(1)} B/s`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB/s`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB/s`;
+  };
 
   return (
     <div className="dashboard-container">
@@ -119,18 +85,13 @@ export function Dashboard() {
 
         <div style={{ marginTop: "auto" }}>
           <SignOutButton>
-            <button
-              className="dashboard-nav__item"
-              style={{
-                width: "100%",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
+            <Button
+              variant="ghost"
+              style={{ width: "100%", justifyContent: "flex-start", padding: '12px 16px' }}
             >
               <LogOut size={20} />
               Sign Out
-            </button>
+            </Button>
           </SignOutButton>
         </div>
       </aside>
@@ -139,132 +100,139 @@ export function Dashboard() {
       <main className="dashboard-main">
         {/* Header */}
         <header className="dashboard-header">
-          <div className="dashboard-header__title">
-            <h1>Intelligence Overview</h1>
-            <p>Welcome back. Here's your current security posture.</p>
+          <div className="dashboard-header__left">
+            <EnvironmentSwitcher />
+            <div className="dashboard-header__title">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h1>Intelligence Overview</h1>
+                {health ? (
+                  <Badge variant={health.state.toLowerCase() === 'running' ? 'success' : 'warning'}>
+                    {health.state} • {health.restarts} restarts
+                  </Badge>
+                ) : (
+                  !loading && (
+                    <Badge variant="error">
+                      Disconnected
+                    </Badge>
+                  )
+                )}
+              </div>
+              <p>Real-time telemetry and resource performance analysis.</p>
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <div style={{ position: "relative" }}>
+          <div className="dashboard-header__actions">
+            <div className="dashboard-header__search-wrapper">
               <input
                 type="text"
                 placeholder="Search resources..."
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid var(--surface-border)",
-                  borderRadius: "12px",
-                  padding: "10px 16px 10px 40px",
-                  color: "white",
-                  fontSize: "0.9rem",
-                }}
+                className="dashboard-header__search"
               />
               <Search
                 size={18}
-                style={{
-                  position: "absolute",
-                  left: "14px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  opacity: 0.4,
-                }}
+                className="dashboard-header__search-icon"
               />
             </div>
-            <button
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid var(--surface-border)",
-                borderRadius: "12px",
-                padding: "10px",
-                color: "white",
-                cursor: "pointer",
-              }}
-            >
+            <Button variant="secondary" isIconOnly>
               <Bell size={20} />
-            </button>
+            </Button>
+            <Button 
+                variant="ghost" 
+                isIconOnly 
+                onClick={() => refetch()}
+                style={{ opacity: loading ? 0.5 : 1 }}
+            >
+              <RefreshCcw size={18} className={loading ? "animate-spin" : ""} />
+            </Button>
             <UserButton />
           </div>
         </header>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Now all using real data */}
         <div className="dashboard-grid">
           <StatCard
-            label="Security Score"
-            value="94%"
-            icon={<CheckCircle2 />}
-            trend={{ value: "2.4%", positive: true }}
-          />
-          <StatCard
-            label="Vulnerabilities"
-            value="12"
-            icon={<ShieldAlert />}
-            trend={{ value: "4", positive: false }}
-          />
-          <StatCard
-            label="Avg. CPU Load"
-            value="42%"
+            label="CPU Load"
+            value={loading ? "..." : cpuLoad !== null ? `${cpuLoad.toFixed(1)}%` : "N/A"}
             icon={<Activity />}
-            trend={{ value: "1.2%", positive: true }}
+            trend={error ? { value: "Error", positive: false } : { value: "Live", positive: true }}
           />
           <StatCard
-            label="Pipeline Success"
-            value="99.8%"
+            label="Memory Usage"
+            value={loading ? "..." : memoryUsage !== null ? `${memoryUsage.toFixed(0)} MB` : "N/A"}
+            icon={<Database />}
+            trend={{ value: "Stable", positive: true }}
+          />
+          <StatCard
+            label="Network Inbound"
+            value={loading ? "..." : formatBytes(networkIO?.receive_bytes_sec)}
+            icon={<Globe />}
+            trend={{ value: "Active", positive: true }}
+          />
+          <StatCard
+            label="Disk Throughput"
+            value={loading ? "..." : formatBytes((diskIO?.read_bytes_sec || 0) + (diskIO?.write_bytes_sec || 0))}
             icon={<Zap />}
-            trend={{ value: "0.1%", positive: true }}
+            trend={{ value: "I/O", positive: true }}
           />
         </div>
 
-        {/* Recent Alerts Section */}
+        {/* Alerts Section - Cleaned up to show empty state */}
         <section className="dashboard-section">
           <div className="dashboard-section__header">
             <h2>Recent Security Alerts</h2>
-            <button
-              style={{
-                color: "var(--accent)",
-                background: "none",
-                border: "none",
-                fontWeight: 600,
-                fontSize: "0.9rem",
-                cursor: "pointer",
-              }}
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsModalOpen(true)}
+              style={{ color: "var(--accent)", fontWeight: 600 }}
             >
-              View All Alerts
-            </button>
+              View History
+            </Button>
           </div>
 
-          <div className="dashboard-table-card">
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Severity</th>
-                  <th>Service</th>
-                  <th>Timestamp</th>
-                </tr>
-              </thead>
-              <tbody>
-                {alerts.map((alert) => (
-                  <tr key={alert.id}>
-                    <td style={{ fontWeight: 500 }}>{alert.title}</td>
-                    <td>
-                      <span
-                        className={`status-badge status-badge--${alert.severity}`}
-                      >
-                        {alert.severity}
-                      </span>
-                    </td>
-                    <td style={{ opacity: 0.7, fontSize: "0.85rem" }}>
-                      {alert.service}
-                    </td>
-                    <td style={{ opacity: 0.5, fontSize: "0.85rem" }}>
-                      {alert.time}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <Card padding="0">
+            <div className="dashboard-table-container">
+              <div style={{ 
+                padding: '48px', 
+                textAlign: 'center', 
+                color: 'var(--text-muted)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <Shield size={48} style={{ opacity: 0.1, marginBottom: '8px' }} />
+                <h3 style={{ color: 'var(--text-primary)' }}>No active alerts detected</h3>
+                <p style={{ fontSize: '0.9rem', maxWidth: '300px' }}>
+                  The <code>alert-service</code> is currently idle or disconnected. Monitor resource metrics above for anomalies.
+                </p>
+                <div style={{ marginTop: '16px' }}>
+                  <Badge variant="warning">Connection Pending</Badge>
+                </div>
+              </div>
           </div>
-        </section>
-      </main>
-    </div>
-  );
+        </Card>
+      </section>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title="Security Audit Log"
+        footer={
+          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            Close Audit Log
+          </Button>
+        }
+      >
+        <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
+          This log will populate once the <code>alert-service</code> and <code>data-service</code> are fully integrated into the control plane.
+        </p>
+        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+          <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+            System ready. Waiting for initial vulnerability scan data...
+          </p>
+        </div>
+      </Modal>
+    </main>
+  </div>
+);
 }

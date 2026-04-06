@@ -9,7 +9,21 @@
       "Bash(lsof *)",
       "Bash(netstat *)",
       "Bash(kill *)",
-      "Bash(pnpm run *)"
+      "Bash(pnpm run *)",
+      "Bash(docker compose ps *)",
+      "Bash(docker ps *)",
+      "Bash(docker stop *)",
+      "Bash(docker compose *)",
+      "Bash(docker compose exec *)",
+      "Bash(python3 *)",
+      "Bash(pip install *)",
+      "Bash(python *)",
+      "Bash(pip3 install *)",
+      "Bash(cd *)",
+      "Bash(nohup *)",
+      "Bash(pkill *)",
+      "Bash(xargs *)",
+      "Bash(tail *)"
     ]
   },
   "$version": 3

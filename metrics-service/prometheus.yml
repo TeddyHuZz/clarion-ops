@@ -2,6 +2,16 @@ global:
   scrape_interval: 1s # Set to 1s for ultra-fast dev feedback
   evaluation_interval: 1s
 
+# Tell Prometheus where to send alerts
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+# Load alert rules
+rule_files:
+  - "alert_rules.yml"
+
 scrape_configs:
   - job_name: 'mock-exporter'
     static_configs:

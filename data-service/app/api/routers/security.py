@@ -22,6 +22,11 @@ class CVECreate(BaseModel):
     package_name: str
     fixed_version: Optional[str] = None
 
+
+class CVEScanResponse(CVECreate):
+    """Response model that includes the database ID."""
+    id: int
+
 @router.post("/scans", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def bulk_ingest_cves(
     cves: List[CVECreate],
@@ -58,7 +63,7 @@ async def bulk_ingest_cves(
             detail=f"Bulk ingestion failed: {str(e)}"
         )
 
-@router.get("/scans/{commit_hash}", response_model=List[CVECreate])
+@router.get("/scans/{commit_hash}", response_model=List[CVEScanResponse])
 async def get_cves_by_commit(
     commit_hash: str,
     db: AsyncSession = Depends(get_db)
@@ -71,10 +76,11 @@ async def get_cves_by_commit(
     query = select(CVEScan).where(CVEScan.commit_hash == commit_hash).order_by(CVEScan.severity.desc())
     result = await db.execute(query)
     scans = result.scalars().all()
-    
-    # Convert SQLAlchemy models to Pydantic models for serialization
+
+    # Convert SQLAlchemy models to Pydantic response models
     return [
-        CVECreate(
+        CVEScanResponse(
+            id=s.id,
             time=s.time,
             commit_hash=s.commit_hash,
             cve_id=s.cve_id,

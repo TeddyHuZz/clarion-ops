@@ -56,7 +56,7 @@ export class RiskScoringEngine {
   }
 
   private static async fetchOpenIncidentCount(): Promise<number> {
-    const res = await fetch(`${DATA_SERVICE_URL}/api/v1/incidents/count?status=OPEN`);
+    const res = await fetch(`${DATA_SERVICE_URL}/api/v1/incidents/count?incident_status=Open`);
     if (!res.ok) return 0;
     return await res.json();
   }

@@ -1,0 +1,38 @@
+groups:
+  - name: mock-exporter-alerts
+    rules:
+      # 1. Simulate high CPU usage
+      - alert: HighCPUUsage
+        expr: up == 1
+        for: 10s
+        labels:
+          severity: critical
+          service: api-gateway
+          instance: prod-node-1
+        annotations:
+          summary: "CPU usage above 90%"
+          description: "Node prod-node-1 has been running at 95% CPU for 10 minutes."
+
+      # 2. Simulate disk space warning
+      - alert: DiskSpaceLow
+        expr: up == 1
+        for: 10s
+        labels:
+          severity: warning
+          service: db-primary
+          instance: prod-db-1
+        annotations:
+          summary: "Disk usage above 80%"
+          description: "Volume /data on prod-db-1 is at 85% capacity."
+
+      # 3. Instance down (useful for real monitoring)
+      - alert: InstanceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+          instance: "{{ $labels.instance }}"
+        annotations:
+          summary: "Instance {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 30 seconds."

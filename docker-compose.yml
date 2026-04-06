@@ -5,8 +5,22 @@ services:
     container_name: prometheus
     volumes:
       - ./metrics-service/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./metrics-service/alert_rules.yml:/etc/prometheus/alert_rules.yml
     ports:
       - "9090:9090"
+    networks:
+      - clarion-net
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./metrics-service/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--log.level=debug'
     networks:
       - clarion-net
 
@@ -53,6 +67,36 @@ services:
     depends_on:
       - timescaledb
       - metrics-service
+    networks:
+      - clarion-net
+
+  alert-service:
+    build:
+      context: ./alert-service
+      dockerfile: Dockerfile
+    container_name: alert-service
+    ports:
+      - "8004:8004"
+    environment:
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - DATA_SERVICE_URL=http://data-service:8002
+    depends_on:
+      - data-service
+    networks:
+      - clarion-net
+
+  deployment-service:
+    build:
+      context: ./deployment-service
+      dockerfile: Dockerfile
+    container_name: deployment-service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATA_SERVICE_URL=http://data-service:8002/api/v1/deployments/
+      - PORT=8003
+    depends_on:
+      - data-service
     networks:
       - clarion-net
 

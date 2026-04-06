@@ -50,7 +50,7 @@ async def create_deployment_event(
             detail=f"Failed to record deployment: {str(e)}"
         )
 
-@router.get("/", response_model=list)
+@router.get("/", response_model=list[DeploymentCreate])
 async def list_deployments(
     limit: int = 50,
     db: AsyncSession = Depends(get_db)
@@ -59,10 +59,23 @@ async def list_deployments(
     Retrieve the most recent deployment events from TimescaleDB.
     """
     from sqlalchemy import select
-    
-    query = select(DeploymentEvent).order_by(DeploymentEvent.time.desc()).limit(20)
+
+    query = select(DeploymentEvent).order_by(DeploymentEvent.time.desc()).limit(limit)
     result = await db.execute(query)
-    return result.scalars().all()
+    deployments = result.scalars().all()
+    
+    # Convert SQLAlchemy models to Pydantic models for serialization
+    return [
+        DeploymentCreate(
+            time=d.time,
+            service_name=d.service_name,
+            commit_hash=d.commit_hash,
+            author=d.author,
+            branch=d.branch,
+            status=d.status
+        )
+        for d in deployments
+    ]
 
 @router.patch("/{commit_hash}", response_model=dict)
 async def update_deployment_risk(

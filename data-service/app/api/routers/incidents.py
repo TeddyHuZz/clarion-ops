@@ -3,7 +3,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from app.db.session import get_db
+from app.db.session import get_session
 from app.models.incidents import Incident
 
 router = APIRouter()
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/count", response_model=int)
 async def get_incident_count(
     status: str = "OPEN",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_session)
 ):
     """
     Get the count of active incidents filtered by status (defaults to OPEN).
@@ -26,7 +26,7 @@ async def get_incident_count(
 async def create_incident(
     title: str,
     status: str = "OPEN",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_session)
 ):
     """
     Create a new incident record in the audit log.

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl *)",
+      "Bash(docker logs *)",
+      "Bash(docker compose up *)",
+      "Bash(docker exec *)",
+      "Bash(sleep *)",
+      "Bash(lsof *)",
+      "Bash(netstat *)",
+      "Bash(kill *)",
+      "Bash(pnpm run *)"
+    ]
+  },
+  "$version": 3
+}

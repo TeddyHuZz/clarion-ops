@@ -1,7 +1,9 @@
 """Service layer for Kubernetes pod resource metrics from Prometheus."""
 
 import logging
+import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from app.services.prometheus_client import PrometheusClient
@@ -24,6 +26,14 @@ _DISK_READ_QUERY = 'rate(container_fs_reads_bytes_total{{namespace="{namespace}"
 _DISK_WRITE_QUERY = 'rate(container_fs_writes_bytes_total{{namespace="{namespace}", pod="{pod}"}}[5m])'
 _NET_RX_QUERY = 'rate(container_network_receive_bytes_total{{namespace="{namespace}", pod="{pod}"}}[5m])'
 _NET_TX_QUERY = 'rate(container_network_transmit_bytes_total{{namespace="{namespace}", pod="{pod}"}}[5m])'
+
+
+def _parse_duration_to_seconds(duration: str) -> float:
+    """Parse Prometheus-style duration string (e.g., '5m', '1h') to seconds."""
+    multipliers = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400, 'w': 604800}
+    unit = duration[-1]
+    value = int(duration[:-1])
+    return value * multipliers.get(unit, 1)
 
 
 def _extract_value(response: dict[str, Any]) -> float | None:
@@ -51,33 +61,72 @@ async def is_target_up(namespace: str) -> bool:
     result = response.get("data", {}).get("result", [])
     return len(result) > 0
 
-async def get_cpu_usage(namespace: str, pod: str) -> MetricResult:
-    """Fetch CPU usage in cores (5-minute average rate)."""
+async def get_cpu_usage(namespace: str, pod: str, range: str | None = None) -> MetricResult | list[dict]:
+    """Fetch CPU usage in cores (5-minute average rate).
+    
+    If *range* is provided (e.g., "5m"), returns a list of historical data points
+    suitable for charting. Otherwise returns a single instant metric.
+    """
     if not await is_target_up(namespace):
-        return MetricResult(value=None, query="GATED: target down", timestamp=None)
-        
+        return [] if range else MetricResult(value=None, query="GATED: target down", timestamp=None)
+
     client = PrometheusClient.get_instance()
     query = _CPU_QUERY.format(namespace=namespace, pod=pod)
-    
+
+    if range:
+        end = time.time()
+        start = end - _parse_duration_to_seconds(range)
+        step = max(10, int(_parse_duration_to_seconds(range) / 30))  # ~30 points
+
+        response = await client.query_range_prometheus(query, start, end, step)
+        result = response.get("data", {}).get("result", [])
+        if not result:
+            return []
+
+        values = result[0].get("values", [])
+        return [
+            {"timestamp": datetime.fromtimestamp(ts).strftime("%H:%M:%S"), "value": float(val)}
+            for ts, val in values
+        ]
+
     response = await client.query_prometheus(query)
     value = _extract_value(response)
     timestamp = response.get("data", {}).get("result", [{}])[0].get("value", [None])[0]
-    
+
     return MetricResult(value=value, query=query, timestamp=float(timestamp) if timestamp else None)
 
 
-async def get_memory_usage(namespace: str, pod: str) -> MetricResult:
-    """Fetch memory working set bytes."""
+async def get_memory_usage(namespace: str, pod: str, range: str | None = None) -> MetricResult | list[dict]:
+    """Fetch memory working set bytes.
+    
+    If *range* is provided (e.g., "5m"), returns a list of historical data points.
+    """
     if not await is_target_up(namespace):
-        return MetricResult(value=None, query="GATED: target down", timestamp=None)
-        
+        return [] if range else MetricResult(value=None, query="GATED: target down", timestamp=None)
+
     client = PrometheusClient.get_instance()
     query = _MEMORY_QUERY.format(namespace=namespace, pod=pod)
-    
+
+    if range:
+        end = time.time()
+        start = end - _parse_duration_to_seconds(range)
+        step = max(10, int(_parse_duration_to_seconds(range) / 30))
+
+        response = await client.query_range_prometheus(query, start, end, step)
+        result = response.get("data", {}).get("result", [])
+        if not result:
+            return []
+
+        values = result[0].get("values", [])
+        return [
+            {"timestamp": datetime.fromtimestamp(ts).strftime("%H:%M:%S"), "value": float(val)}
+            for ts, val in values
+        ]
+
     response = await client.query_prometheus(query)
     value = _extract_value(response)
     timestamp = response.get("data", {}).get("result", [{}])[0].get("value", [None])[0]
-    
+
     return MetricResult(value=value, query=query, timestamp=float(timestamp) if timestamp else None)
 
 

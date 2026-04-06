@@ -43,9 +43,13 @@ async def _handle_metric_error(name: str, error: Exception) -> None:
 async def get_cpu(
     namespace: str = Query(..., description="Kubernetes namespace"),
     pod_name: str = Query(..., description="Pod name"),
+    range: str = Query(None, description="Time range for history (e.g., '5m', '1h')"),
 ):
     try:
-        result = await get_cpu_usage(namespace, pod_name)
+        result = await get_cpu_usage(namespace, pod_name, range=range)
+        # If range query, result is already a list of points
+        if isinstance(result, list):
+            return result
         return _format_single(result)
     except Exception as e:
         await _handle_metric_error("CPU", e)
@@ -55,9 +59,13 @@ async def get_cpu(
 async def get_memory(
     namespace: str = Query(..., description="Kubernetes namespace"),
     pod_name: str = Query(..., description="Pod name"),
+    range: str = Query(None, description="Time range for history (e.g., '5m', '1h')"),
 ):
     try:
-        result = await get_memory_usage(namespace, pod_name)
+        result = await get_memory_usage(namespace, pod_name, range=range)
+        # If range query, result is already a list of points
+        if isinstance(result, list):
+            return result
         return _format_single(result)
     except Exception as e:
         await _handle_metric_error("Memory", e)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useEnvironment } from '../contexts/EnvironmentContext';
 
 const API_BASE_URL = import.meta.env.VITE_METRICS_API_URL || 'http://localhost:8001/api/v1/metrics';
@@ -32,7 +32,7 @@ const MAX_HISTORY = 30; // Number of points to keep for charts
 
 export function useMetrics(podName: string, pollInterval: number = 5000) {
   const { currentEnv } = useEnvironment();
-  
+
   // Map 'dev' to 'test-ns' for mock-exporter compatibility
   const namespace = useMemo(() => {
     return currentEnv === 'dev' ? 'test-ns' : currentEnv;
@@ -51,14 +51,19 @@ export function useMetrics(podName: string, pollInterval: number = 5000) {
   const [cpuHistory, setCpuHistory] = useState<MetricDataPoint[]>([]);
   const [memoryHistory, setMemoryHistory] = useState<MetricDataPoint[]>([]);
 
+  // Track first load to fetch historical range data
+  const hasLoadedHistory = useRef(false);
+
   const fetchMetrics = useCallback(async () => {
     try {
-      // Don't set loading=true on every poll to avoid UI flickers, 
-      // but clear errors at start of new attempt
       setError(null);
+
+      // Fetch historical range data on first load only
+      const rangeParam = !hasLoadedHistory.current ? '&range=5m' : '';
+
       const [cpuResp, memResp, diskResp, netResp, healthResp, slaResp] = await Promise.all([
-        fetch(`${API_BASE_URL}/cpu?namespace=${namespace}&pod_name=${podName}`),
-        fetch(`${API_BASE_URL}/memory?namespace=${namespace}&pod_name=${podName}`),
+        fetch(`${API_BASE_URL}/cpu?namespace=${namespace}&pod_name=${podName}${rangeParam}`),
+        fetch(`${API_BASE_URL}/memory?namespace=${namespace}&pod_name=${podName}${rangeParam}`),
         fetch(`${API_BASE_URL}/disk?namespace=${namespace}&pod_name=${podName}`),
         fetch(`${API_BASE_URL}/network?namespace=${namespace}&pod_name=${podName}`),
         fetch(`${API_BASE_URL}/pod-health?namespace=${namespace}`),
@@ -73,11 +78,23 @@ export function useMetrics(podName: string, pollInterval: number = 5000) {
         cpuResp.json(), memResp.json(), diskResp.json(), netResp.json(), healthResp.json(), slaResp.json()
       ]);
 
-      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      // Mark history as loaded after first successful fetch
+      if (!hasLoadedHistory.current) {
+        hasLoadedHistory.current = true;
+      }
 
       // Process CPU
-      if (cpuData.length > 0) {
+      if (Array.isArray(cpuData) && cpuData.length > 1) {
+        // Range query returns multiple points -> Replace history
+        setCpuHistory(cpuData.map((d: MetricDataPoint) => ({
+          timestamp: d.timestamp,
+          value: d.value * 100,
+        })));
+        setCpuLoad(cpuData[cpuData.length - 1].value * 100);
+      } else if (cpuData.length > 0) {
+        // Instant query returns single point -> Append to history
         const value = cpuData[0].value * 100;
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         setCpuLoad(value);
         setCpuHistory(prev => [...prev.slice(-(MAX_HISTORY - 1)), { timestamp: now, value }]);
       } else {
@@ -85,8 +102,17 @@ export function useMetrics(podName: string, pollInterval: number = 5000) {
       }
 
       // Process Memory
-      if (memData.length > 0) {
+      if (Array.isArray(memData) && memData.length > 1) {
+        // Range query -> Replace history
+        setMemoryHistory(memData.map((d: MetricDataPoint) => ({
+          timestamp: d.timestamp,
+          value: d.value / (1024 * 1024),
+        })));
+        setMemoryUsage(memData[memData.length - 1].value / (1024 * 1024));
+      } else if (memData.length > 0) {
+        // Instant query -> Append to history
         const value = memData[0].value / (1024 * 1024);
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         setMemoryUsage(value);
         setMemoryHistory(prev => [...prev.slice(-(MAX_HISTORY - 1)), { timestamp: now, value }]);
       } else {
@@ -108,7 +134,6 @@ export function useMetrics(podName: string, pollInterval: number = 5000) {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fetch error');
-      // On error, clear current status to trigger "Disconnected" UI
       setHealth(null);
       setCpuLoad(null);
       setMemoryUsage(null);
@@ -122,13 +147,13 @@ export function useMetrics(podName: string, pollInterval: number = 5000) {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, pollInterval);
     return () => clearInterval(interval);
-  }, [fetchMetrics, pollInterval, currentEnv]);
+  }, [fetchMetrics, pollInterval]);
 
-  return { 
+  return {
     cpuLoad, cpuHistory,
     memoryUsage, memoryHistory,
-    diskIO, networkIO, 
-    health, sla, loading, error, 
-    refetch: fetchMetrics 
+    diskIO, networkIO,
+    health, sla, loading, error,
+    refetch: fetchMetrics
   };
 }

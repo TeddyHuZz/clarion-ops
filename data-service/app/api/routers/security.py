@@ -58,7 +58,7 @@ async def bulk_ingest_cves(
             detail=f"Bulk ingestion failed: {str(e)}"
         )
 
-@router.get("/scans/{commit_hash}", response_model=List[dict])
+@router.get("/scans/{commit_hash}", response_model=List[CVECreate])
 async def get_cves_by_commit(
     commit_hash: str,
     db: AsyncSession = Depends(get_db)
@@ -67,7 +67,20 @@ async def get_cves_by_commit(
     Retrieve all security vulnerability scan results for a specific commit.
     """
     from sqlalchemy import select
-    
+
     query = select(CVEScan).where(CVEScan.commit_hash == commit_hash).order_by(CVEScan.severity.desc())
     result = await db.execute(query)
-    return result.scalars().all()
+    scans = result.scalars().all()
+    
+    # Convert SQLAlchemy models to Pydantic models for serialization
+    return [
+        CVECreate(
+            time=s.time,
+            commit_hash=s.commit_hash,
+            cve_id=s.cve_id,
+            severity=s.severity,
+            package_name=s.package_name,
+            fixed_version=s.fixed_version
+        )
+        for s in scans
+    ]

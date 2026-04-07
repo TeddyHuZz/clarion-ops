@@ -23,10 +23,15 @@ app.use(express.json());
 // Routes
 import { handleGithubWebhook } from './controllers/webhookController.js';
 import { handleTrivyWebhook } from './controllers/securityController.js';
+import { handleRollback } from './controllers/deploymentController.js';
+import { internalAuth } from './middleware/internalAuth.js';
 import { getRecentDeployments } from './services/dataQuery.js';
 
 app.post('/webhooks/github', handleGithubWebhook);
 app.post('/webhooks/trivy', handleTrivyWebhook);
+
+// Rollback endpoint — protected by internal service token
+app.post('/deployments/rollback', internalAuth, handleRollback);
 
 app.get('/deployments', async (_req: Request, res: Response) => {
   const deployments = await getRecentDeployments();

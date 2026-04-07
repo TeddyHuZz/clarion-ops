@@ -95,6 +95,10 @@ services:
     environment:
       - DATA_SERVICE_URL=http://data-service:8002/api/v1/deployments/
       - PORT=8003
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-dev-internal-secret-key}
+      - GITHUB_OWNER=${GITHUB_OWNER:-TeddyHuZz}
+      - GITHUB_REPO=${GITHUB_REPO:-clarion-ops}
+      - GITHUB_PAT=${GITHUB_PAT}
     depends_on:
       - data-service
     networks:

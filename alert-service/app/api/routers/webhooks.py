@@ -12,13 +12,13 @@ dedicated background worker that drains alerts sequentially.
 
 import asyncio
 import logging
-import random
 from typing import Any, Dict, List
 
 import httpx
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import settings
+from app.services.llm_engine import run_groq_rca
 from app.services.slack_notifier import send_slack_alert
 
 router = APIRouter()
@@ -28,8 +28,9 @@ logger = logging.getLogger(__name__)
 # Global alert queue (alert-storm protection)
 # ---------------------------------------------------------------------------
 alert_queue: asyncio.Queue[tuple[int, Dict[str, Any]]] = asyncio.Queue()
+
 # ---------------------------------------------------------------------------
-# Helpers
+# Constants
 # ---------------------------------------------------------------------------
 
 METRICS_SERVICE_URL = "http://metrics-service:8001"
@@ -41,28 +42,6 @@ INTERNAL_HEADERS = {
     "Accept": "application/json",
     "Content-Type": "application/json",
 }
-
-# ---------------------------------------------------------------------------
-# AI Simulation
-# ---------------------------------------------------------------------------
-
-async def run_groq_rca(ai_context_payload: Dict[str, Any]) -> int:
-    """
-    Placeholder for Groq-powered Root Cause Analysis.
-    Accepts an enriched context payload containing alert details,
-    container logs, and deployment history.
-    Simulates LLM latency and returns a confidence score (50–100).
-    """
-    # Log what context we received (for debugging)
-    service = ai_context_payload.get("service_name", "unknown")
-    has_logs = bool(ai_context_payload.get("pod_logs"))
-    has_deployment = bool(ai_context_payload.get("last_deployment"))
-    logger.info(
-        "[groq-rca] Analyzing incident for %s — logs: %s, deployment_info: %s",
-        service, has_logs, has_deployment,
-    )
-    await asyncio.sleep(3)
-    return random.randint(50, 100)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -204,23 +183,21 @@ async def _process_incident(
     }
 
     # Step 4: Run AI analysis with enriched context
-    confidence = await run_groq_rca(ai_context_payload)
+    rca_result = await run_groq_rca(ai_context_payload)
+    confidence = rca_result["confidence_score"]
+    recommended_action = rca_result["recommended_action"]
+    root_cause = rca_result["root_cause_summary"]
+
     logger.info(
-        "[ai-orchestrator] Incident %d confidence_score=%d%%",
-        incident_id, confidence,
+        "[ai-orchestrator] Incident %d — confidence=%d%%, action=%s, summary=%s",
+        incident_id, confidence, recommended_action, root_cause,
     )
 
-    # Step 5: Route based on confidence threshold
-    if confidence > 85:
+    # Step 5: Route based on AI recommendation
+    if recommended_action == "escalate" or confidence <= 85:
         logger.info(
-            "[ai-orchestrator] Auto-remediation triggered for incident %d",
-            incident_id,
-        )
-        await _patch_status(client, incident_id, "Resolved")
-    else:
-        logger.info(
-            "[ai-orchestrator] Incident %d → Manual Intervention (score=%d%%)",
-            incident_id, confidence,
+            "[ai-orchestrator] Incident %d → Manual Intervention (score=%d%%, action=%s)",
+            incident_id, confidence, recommended_action,
         )
         await _patch_status(client, incident_id, "Manual Intervention")
 
@@ -235,10 +212,19 @@ async def _process_incident(
                 "status": "Manual Intervention",
                 "description": (
                     f"@{on_call_user} — AI analysis scored {confidence}%. "
-                    "Human review required."
+                    f"Root cause: {root_cause}. "
+                    f"Recommended action: {recommended_action}."
                 ),
             }
             await send_slack_alert(slack_data)
+    else:
+        # Auto-remediate based on AI recommendation
+        logger.info(
+            "[ai-orchestrator] Auto-remediation triggered for incident %d — action=%s",
+            incident_id, recommended_action,
+        )
+        # TODO: Implement actual remediation actions (rollback/restart)
+        await _patch_status(client, incident_id, "Resolved")
 
 # ---------------------------------------------------------------------------
 # Background Worker (alert-storm drain)

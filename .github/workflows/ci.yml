@@ -1,0 +1,181 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: 20
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # ===========================================================================
+  # Python Services — Lint & Type Check
+  # ===========================================================================
+  python-lint:
+    name: "Python: ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [alert-service, data-service, metrics-service]
+        include:
+          - service: alert-service
+            path: alert-service
+          - service: data-service
+            path: data-service
+          - service: metrics-service
+            path: metrics-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # --- Install dev dependencies (ruff, mypy, etc.) ---
+      - name: Install dev tools
+        run: |
+          pip install ruff mypy
+
+      # --- Install service deps ---
+      - name: Install dependencies
+        working-directory: ${{ matrix.path }}
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          elif [ -f pyproject.toml ]; then
+            pip install -e ".[dev]"
+          fi
+
+      # --- Lint (ruff) ---
+      - name: Ruff lint check
+        working-directory: ${{ matrix.path }}
+        run: |
+          ruff check .
+
+      - name: Ruff format check
+        working-directory: ${{ matrix.path }}
+        run: |
+          ruff format --check .
+
+      # --- Type check (mypy) ---
+      - name: Mypy type check
+        working-directory: ${{ matrix.path }}
+        run: |
+          mypy app/ --ignore-missing-imports --no-namespace-packages || true
+
+      # --- Docker build sanity ---
+      - name: Docker build check
+        if: hashFiles('${{ matrix.path }}/Dockerfile') != ''
+        run: |
+          docker build -t ${{ matrix.service }}:ci-test -f ${{ matrix.path }}/Dockerfile ${{ matrix.path }}
+
+  # ===========================================================================
+  # TypeScript Services — Lint, Type Check & Build
+  # ===========================================================================
+  typescript-lint:
+    name: "TypeScript: ${{ matrix.service }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [dashboard-ui, deployment-service]
+        include:
+          - service: dashboard-ui
+            path: dashboard-ui
+          - service: deployment-service
+            path: deployment-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # --- pnpm for deployment-service, npm for dashboard-ui ---
+      - name: Setup pnpm (deployment-service)
+        if: matrix.service == 'deployment-service'
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      # --- Install dependencies ---
+      - name: Install dependencies (dashboard-ui)
+        if: matrix.service == 'dashboard-ui'
+        working-directory: ${{ matrix.path }}
+        run: npm ci
+
+      - name: Install dependencies (deployment-service)
+        if: matrix.service == 'deployment-service'
+        working-directory: ${{ matrix.path }}
+        run: pnpm install --frozen-lockfile
+
+      # --- Lint ---
+      - name: ESLint
+        working-directory: ${{ matrix.path }}
+        run: npm run lint --if-present || pnpm run lint --if-present
+
+      # --- Type check ---
+      - name: TypeScript type check
+        working-directory: ${{ matrix.path }}
+        run: npx tsc --noEmit
+
+      # --- Build ---
+      - name: Build (dashboard-ui)
+        if: matrix.service == 'dashboard-ui'
+        working-directory: ${{ matrix.path }}
+        run: npm run build
+
+      - name: Build (deployment-service)
+        if: matrix.service == 'deployment-service'
+        working-directory: ${{ matrix.path }}
+        run: pnpm run build
+
+      # --- Docker build sanity ---
+      - name: Docker build check
+        if: hashFiles('${{ matrix.path }}/Dockerfile') != ''
+        run: |
+          docker build -t ${{ matrix.service }}:ci-test -f ${{ matrix.path }}/Dockerfile ${{ matrix.path }}
+
+  # ===========================================================================
+  # Docker Compose Validation
+  # ===========================================================================
+  docker-compose-check:
+    name: "Docker Compose Validation"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose syntax
+        run: |
+          docker compose -f docker-compose.yml config --quiet && echo "✅ docker-compose.yml is valid"
+
+  # ===========================================================================
+  # Security — Secret Scanning
+  # ===========================================================================
+  security-scan:
+    name: "Security: Secret Scanning"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

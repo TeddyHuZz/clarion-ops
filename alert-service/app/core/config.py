@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Slack Incoming Webhook URL for ChatOps notifications
     SLACK_WEBHOOK_URL: Optional[str] = None
 
+    # Groq API Key for LLM-powered Root Cause Analysis
+    GROQ_API_KEY: Optional[str] = None
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

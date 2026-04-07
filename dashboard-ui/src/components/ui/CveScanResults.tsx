@@ -44,8 +44,9 @@ export function CveScanResults({ commitHash }: Props) {
 
       const data = await response.json();
       setVulnerabilities(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
     } finally {
       setLoading(false);
     }

@@ -12,7 +12,7 @@ dedicated background worker that drains alerts sequentially.
 
 import asyncio
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Global alert queue (alert-storm protection)
 # ---------------------------------------------------------------------------
-alert_queue: asyncio.Queue[tuple[int, Dict[str, Any]]] = asyncio.Queue()
+alert_queue: asyncio.Queue[tuple[int, dict[str, Any]]] = asyncio.Queue()
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -47,10 +47,11 @@ INTERNAL_HEADERS = {
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _get_escalation_policy(
     client: httpx.AsyncClient,
     service_name: str,
-) -> Dict[str, Any] | None:
+) -> dict[str, Any] | None:
     """Fetch the escalation policy for a service from data-service."""
     try:
         resp = await client.get(
@@ -79,13 +80,13 @@ async def _patch_status(
             timeout=10,
         )
         if resp.status_code == 200:
-            logger.info(
-                "[ai-orchestrator] Incident %d → %s", incident_id, new_status
-            )
+            logger.info("[ai-orchestrator] Incident %d → %s", incident_id, new_status)
             return True
         logger.error(
             "[ai-orchestrator] PATCH %d returned %s: %s",
-            incident_id, resp.status_code, resp.text[:200],
+            incident_id,
+            resp.status_code,
+            resp.text[:200],
         )
     except Exception as exc:
         logger.error("[ai-orchestrator] PATCH failed for %d: %s", incident_id, exc)
@@ -96,11 +97,12 @@ async def _patch_status(
 # Context Aggregation
 # ---------------------------------------------------------------------------
 
+
 async def _fetch_context(
     client: httpx.AsyncClient,
     service_name: str,
     pod_name: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Concurrently fetch pod logs and latest deployment info.
     Returns a context dictionary for the AI analysis engine.
@@ -119,7 +121,9 @@ async def _fetch_context(
     )
 
     logs_resp, deploy_resp = await asyncio.gather(
-        logs_task, deployment_task, return_exceptions=True,
+        logs_task,
+        deployment_task,
+        return_exceptions=True,
     )
 
     # Parse logs
@@ -131,7 +135,7 @@ async def _fetch_context(
         logger.warning("[context] Failed to fetch logs for %s: %s", pod_name, logs_resp)
 
     # Parse deployment info
-    last_deployment: Dict[str, Any] | None = None
+    last_deployment: dict[str, Any] | None = None
     if isinstance(deploy_resp, httpx.Response) and deploy_resp.status_code == 200:
         last_deployment = deploy_resp.json()
     elif isinstance(deploy_resp, Exception):
@@ -142,14 +146,16 @@ async def _fetch_context(
         "last_deployment": last_deployment,
     }
 
+
 # ---------------------------------------------------------------------------
 # AI Orchestration Pipeline
 # ---------------------------------------------------------------------------
 
+
 async def _process_incident(
     client: httpx.AsyncClient,
     incident_id: int,
-    incident_data: Dict[str, Any],
+    incident_data: dict[str, Any],
 ) -> None:
     """
     Self-healing state machine with Context Aggregation:
@@ -167,9 +173,20 @@ async def _process_incident(
     await _patch_status(client, incident_id, "AI Investigating")
 
     # Step 3: Context Aggregation — fetch logs + deployment concurrently
-    print(f"[ai-orchestrator] Fetching context for incident {incident_id} (service={service_name}, pod={pod_name})", flush=True)
+    logger.info(
+        "[ai-orchestrator] Fetching context for incident %d (service=%s, pod=%s)",
+        incident_id,
+        service_name,
+        pod_name,
+    )
     context = await _fetch_context(client, service_name, pod_name)
-    print(f"[ai-orchestrator] Context fetched — logs: {len(context.get('pod_logs', ''))} chars, deployment: {bool(context.get('last_deployment'))}", flush=True)
+    logs_len = len(context.get("pod_logs", ""))
+    has_deploy = bool(context.get("last_deployment"))
+    logger.info(
+        "[ai-orchestrator] Context fetched — logs: %d chars, deployment: %s",
+        logs_len,
+        has_deploy,
+    )
 
     # Build the enriched payload for the LLM
     ai_context_payload = {
@@ -190,14 +207,19 @@ async def _process_incident(
 
     logger.info(
         "[ai-orchestrator] Incident %d — confidence=%d%%, action=%s, summary=%s",
-        incident_id, confidence, recommended_action, root_cause,
+        incident_id,
+        confidence,
+        recommended_action,
+        root_cause,
     )
 
     # Step 5: Route based on AI recommendation
     if recommended_action == "escalate" or confidence <= 85:
         logger.info(
             "[ai-orchestrator] Incident %d → Manual Intervention (score=%d%%, action=%s)",
-            incident_id, confidence, recommended_action,
+            incident_id,
+            confidence,
+            recommended_action,
         )
         await _patch_status(client, incident_id, "Manual Intervention")
 
@@ -221,14 +243,17 @@ async def _process_incident(
         # Auto-remediate based on AI recommendation
         logger.info(
             "[ai-orchestrator] Auto-remediation triggered for incident %d — action=%s",
-            incident_id, recommended_action,
+            incident_id,
+            recommended_action,
         )
         # TODO: Implement actual remediation actions (rollback/restart)
         await _patch_status(client, incident_id, "Resolved")
 
+
 # ---------------------------------------------------------------------------
 # Background Worker (alert-storm drain)
 # ---------------------------------------------------------------------------
+
 
 async def _alert_worker() -> None:
     """
@@ -240,7 +265,7 @@ async def _alert_worker() -> None:
             incident_id, incident_data = await alert_queue.get()
             try:
                 await _process_incident(client, incident_id, incident_data)
-            except Exception as exc:
+            except Exception:
                 logger.exception(
                     "[ai-orchestrator] Unhandled error processing incident %d",
                     incident_id,
@@ -250,12 +275,16 @@ async def _alert_worker() -> None:
                 # Rate-limit: pause between items to avoid LLM API overload
                 await asyncio.sleep(1)
 
+
 # ---------------------------------------------------------------------------
 # Endpoint
 # ---------------------------------------------------------------------------
 
+
 @router.post("/alertmanager", status_code=202)
-async def handle_alertmanager_webhook(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_alertmanager_webhook(
+    payload: dict[str, Any],
+) -> dict[str, Any]:
     """
     Accept Prometheus Alertmanager JSON, persist each alert, enqueue for
     AI processing, and return 202 immediately.
@@ -277,7 +306,7 @@ async def handle_alertmanager_webhook(payload: Dict[str, Any]) -> Dict[str, Any]
             ]
         }
     """
-    alerts: List[Dict[str, Any]] = payload.get("alerts", [])
+    alerts: list[dict[str, Any]] = payload.get("alerts", [])
     if not alerts:
         raise HTTPException(status_code=400, detail="No alerts in payload")
 
@@ -287,9 +316,7 @@ async def handle_alertmanager_webhook(payload: Dict[str, Any]) -> Dict[str, Any]
             labels = alert.get("labels", {})
             annotations = alert.get("annotations", {})
 
-            service_name = (
-                labels.get("service") or labels.get("instance") or "unknown-service"
-            )
+            service_name = labels.get("service") or labels.get("instance") or "unknown-service"
             severity = (labels.get("severity") or "info").lower()
             alertname = labels.get("alertname", "Unknown Alert")
             title = annotations.get("summary") or alertname
@@ -324,7 +351,8 @@ async def handle_alertmanager_webhook(payload: Dict[str, Any]) -> Dict[str, Any]
                 else:
                     logger.error(
                         "[webhook] data-service returned %s: %s",
-                        resp.status_code, resp.text[:200],
+                        resp.status_code,
+                        resp.text[:200],
                     )
             except Exception as exc:
                 logger.error("[webhook] Failed to persist incident: %s", exc)

@@ -6,13 +6,13 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query
 
 from app.services.resource_metrics import (
+    MetricResult,
     get_cpu_usage,
-    get_memory_usage,
     get_disk_io,
+    get_memory_usage,
+    get_namespace_sla,
     get_network_io,
     get_pod_health,
-    get_namespace_sla,
-    MetricResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -81,17 +81,21 @@ async def get_disk(
         # Combine read/write into a Recharts-friendly format for potential dual-line charts
         read_res = results["read_bytes_sec"]
         write_res = results["write_bytes_sec"]
-        
+
         # Return as a list with combined metrics per timestamp
         ts = _format_ts(read_res.timestamp or write_res.timestamp)
         if read_res.value is None and write_res.value is None:
             return []
-            
-        return [{
-            "timestamp": ts,
-            "read_bytes_sec": round(read_res.value, 4) if read_res.value is not None else 0.0,
-            "write_bytes_sec": round(write_res.value, 4) if write_res.value is not None else 0.0,
-        }]
+
+        return [
+            {
+                "timestamp": ts,
+                "read_bytes_sec": round(read_res.value, 4) if read_res.value is not None else 0.0,
+                "write_bytes_sec": round(write_res.value, 4)
+                if write_res.value is not None
+                else 0.0,
+            }
+        ]
     except Exception as e:
         await _handle_metric_error("Disk", e)
 
@@ -105,16 +109,18 @@ async def get_network(
         results = await get_network_io(namespace, pod_name)
         rx = results["receive_bytes_sec"]
         tx = results["transmit_bytes_sec"]
-        
+
         ts = _format_ts(rx.timestamp or tx.timestamp)
         if rx.value is None and tx.value is None:
             return []
-            
-        return [{
-            "timestamp": ts,
-            "receive_bytes_sec": round(rx.value, 4) if rx.value is not None else 0.0,
-            "transmit_bytes_sec": round(tx.value, 4) if tx.value is not None else 0.0,
-        }]
+
+        return [
+            {
+                "timestamp": ts,
+                "receive_bytes_sec": round(rx.value, 4) if rx.value is not None else 0.0,
+                "transmit_bytes_sec": round(tx.value, 4) if tx.value is not None else 0.0,
+            }
+        ]
     except Exception as e:
         await _handle_metric_error("Network", e)
 
@@ -142,12 +148,13 @@ async def get_pod_restarts(
                 "pod": item["pod"],
                 "container": item["container"],
                 "restarts": item["restarts"],
-                "status": item["state"]
+                "status": item["state"],
             }
             for item in health_data
         ]
     except Exception as e:
         await _handle_metric_error("Pod Restarts", e)
+
 
 @router.get("/sla")
 async def get_sla(
@@ -156,9 +163,9 @@ async def get_sla(
 ):
     """Get the uptime SLA percentage for a namespace over a given window."""
     try:
-      result = await get_namespace_sla(namespace, window)
-      if result.value is None:
-        return 0.0
-      return round(result.value, 2)
+        result = await get_namespace_sla(namespace, window)
+        if result.value is None:
+            return 0.0
+        return round(result.value, 2)
     except Exception as e:
         await _handle_metric_error("SLA", e)

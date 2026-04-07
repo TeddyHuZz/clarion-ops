@@ -36,7 +36,7 @@ export class RiskScoringEngine {
       score += (incidentCount * 25);
 
       // 4. Security Penalties
-      cves.forEach((cve: any) => {
+      cves.forEach((cve: { severity: string }) => {
         if (cve.severity.toUpperCase() === 'CRITICAL') score += 50;
         else if (cve.severity.toUpperCase() === 'HIGH') score += 15;
       });
@@ -61,7 +61,7 @@ export class RiskScoringEngine {
     return await res.json();
   }
 
-  private static async fetchCveResults(commitHash: string): Promise<any[]> {
+  private static async fetchCveResults(commitHash: string): Promise<Array<{ severity: string }>> {
     const res = await fetch(`${DATA_SERVICE_URL}/api/v1/security/scans/${commitHash}`);
     if (!res.ok) return [];
     return await res.json();

@@ -1,13 +1,13 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class Environment(str, Enum):
+class Environment(StrEnum):
     DEV = "dev"
     STAGING = "staging"
     PRODUCTION = "production"
 
 
-class MetricType(str, Enum):
+class MetricType(StrEnum):
     CPU = "cpu"
     MEMORY = "memory"
     DISK = "disk"

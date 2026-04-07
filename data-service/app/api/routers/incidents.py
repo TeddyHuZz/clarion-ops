@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func, update as sql_update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user_or_service
@@ -16,20 +17,28 @@ router = APIRouter()
 # Pydantic schemas
 # ---------------------------------------------------------------------------
 
-VALID_STATUSES = Literal["Open", "AI Investigating", "Acknowledged", "Manual Intervention", "Resolved"]
+VALID_STATUSES = Literal[
+    "Open",
+    "AI Investigating",
+    "Acknowledged",
+    "Manual Intervention",
+    "Resolved",
+]
 
 
 class IncidentCreate(BaseModel):
     """Schema for ingesting a new incident event from internal pipelines."""
+
     time: datetime = Field(default_factory=datetime.utcnow)
     service_name: str
     severity: str
     status: str = Field(default="Open")
-    raw_payload: Optional[dict] = None
+    raw_payload: dict | None = None
 
 
 class StatusUpdate(BaseModel):
     """Schema for updating an incident's status."""
+
     status: VALID_STATUSES
 
 
@@ -37,10 +46,11 @@ class StatusUpdate(BaseModel):
 # Endpoints
 # ---------------------------------------------------------------------------
 
+
 @router.get("/", response_model=list[dict])
 async def list_incidents(
-    db: AsyncSession = Depends(get_session),
-    user=Depends(get_current_user_or_service),
+    db: AsyncSession = Depends(get_session),  # noqa: B008
+    user=Depends(get_current_user_or_service),  # noqa: B008
 ):
     """Return all incidents, ordered by most recent first."""
     query = select(IncidentEvent).order_by(IncidentEvent.time.desc())
@@ -64,8 +74,8 @@ async def list_incidents(
 async def update_incident_status(
     incident_id: int,
     payload: StatusUpdate,
-    db: AsyncSession = Depends(get_session),
-    user=Depends(get_current_user_or_service),
+    db: AsyncSession = Depends(get_session),  # noqa: B008
+    user=Depends(get_current_user_or_service),  # noqa: B008
 ):
     """Update the status of an incident. Requires Clerk JWT authentication."""
     query = select(IncidentEvent).where(IncidentEvent.id == incident_id)
@@ -90,7 +100,7 @@ async def update_incident_status(
 @router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_incident_event(
     incident: IncidentCreate,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = Depends(get_session),  # noqa: B008
 ):
     """
     Internal endpoint to ingest a new incident event.
@@ -118,14 +128,12 @@ async def create_incident_event(
 @router.get("/count", response_model=int)
 async def get_incident_count(
     incident_status: str = "Open",
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = Depends(get_session),  # noqa: B008
 ):
     """
     Get the count of incidents filtered by status.
     Used by the RiskScoringEngine to assess live system stability.
     """
-    query = select(func.count(IncidentEvent.id)).where(
-        IncidentEvent.status == incident_status
-    )
+    query = select(func.count(IncidentEvent.id)).where(IncidentEvent.status == incident_status)
     result = await db.execute(query)
     return result.scalar_one() or 0

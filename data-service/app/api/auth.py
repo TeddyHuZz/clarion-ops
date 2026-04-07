@@ -1,8 +1,9 @@
-from fastapi import Security, HTTPException, Request, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
+from typing import Annotated, Any
+
+from fastapi import Depends, HTTPException, Request, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError
 from starlette import status
-from typing import Annotated, Dict, Any
 
 from ..core.config import settings
 
@@ -14,10 +15,11 @@ bearer_scheme = HTTPBearer(auto_error=False)
 # Auth Dependency
 # ---------------------------------------------------------------------------
 
+
 def get_current_user_or_service(
     request: Request,
-    auth: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
-) -> Dict[str, Any]:
+    auth: HTTPAuthorizationCredentials | None = Security(bearer_scheme),  # noqa: B008
+) -> dict[str, Any]:
     """
     Security Dependency:
     - Internal service: Bypass Clerk if 'X-Internal-Key' matches
@@ -38,7 +40,7 @@ def get_current_user_or_service(
         )
 
     try:
-        token = auth.credentials
+        _ = auth.credentials
 
         # DUMMY VALIDATION PLACEHOLDER:
         # In production, verify 'token' with 'settings.CLERK_JWT_PUBLIC_KEY'
@@ -47,22 +49,22 @@ def get_current_user_or_service(
 
         return {"id": "mock_clerk_id", "role": "user", "source": "frontend", "authenticated": True}
 
-    except JWTError:
+    except JWTError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from err
 
 
 # ---------------------------------------------------------------------------
 # RBAC Dependencies
 # ---------------------------------------------------------------------------
 
-CurrentUser = Annotated[Dict[str, Any], Depends(get_current_user_or_service)]
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user_or_service)]
 
 
-def require_admin(user: CurrentUser) -> Dict[str, Any]:
+def require_admin(user: CurrentUser) -> dict[str, Any]:
     """
     RBAC guard: ensures the authenticated user holds the 'admin' role.
     The internal service bypass is also granted admin access for automation.

@@ -12,7 +12,7 @@ import { Card } from './card';
 
 interface MetricChartProps {
   title: string;
-  data: any[];
+  data: Record<string, unknown>[];
   dataKey: string;
   color: string;
   unit?: string;
@@ -57,8 +57,8 @@ export const MetricChart: React.FC<MetricChartProps> = ({
               }}
               labelStyle={{ color: 'var(--text-muted)' }}
               itemStyle={{ color: color }}
-              formatter={(value: any) => [
-                typeof value === 'number' ? `${value.toFixed(2)}${unit}` : String(value), 
+              formatter={(value: unknown) => [
+                typeof value === 'number' ? `${value.toFixed(2)}${unit}` : String(value),
                 title
               ]}
             />

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- Provider and hook co-located intentionally */
 import React, { createContext, useContext, useState } from 'react';
 
 export type Environment = 'dev' | 'staging' | 'prod';

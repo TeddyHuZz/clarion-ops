@@ -4,7 +4,6 @@ import logging
 from typing import Any
 
 import httpx
-from prometheus_client.parser import text_string_to_metric_families
 
 from app.config import settings
 
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class PrometheusClient:
     """Singleton async client for Prometheus HTTP API.
-    
+
     Time Complexity: __init__ O(1), query_prometheus O(n) where n = HTTP response size
     Space Complexity: O(1) connection pool reused across calls
     """
@@ -45,13 +44,13 @@ class PrometheusClient:
 
     async def query_prometheus(self, promql_query: str) -> dict[str, Any]:
         """Execute an instant PromQL query against /api/v1/query endpoint.
-        
+
         Args:
             promql_query: Valid PromQL expression string.
-        
+
         Returns:
             Raw JSON response dict with 'status' and 'data' keys.
-        
+
         Raises:
             HTTPStatusError: On non-2xx Prometheus API responses.
             ConnectError: When Prometheus server is unreachable.
@@ -67,7 +66,11 @@ class PrometheusClient:
 
             if payload.get("status") != "success":
                 error_msg = payload.get("error", "Unknown Prometheus error")
-                logger.error("Prometheus query failed: query=%s error=%s", promql_query, error_msg)
+                logger.error(
+                    "Prometheus query failed: query=%s error=%s",
+                    promql_query,
+                    error_msg,
+                )
                 raise httpx.HTTPStatusError(
                     message=f"Prometheus query failed: {error_msg}",
                     request=response.request,
@@ -79,8 +82,12 @@ class PrometheusClient:
         except httpx.ConnectError as exc:
             logger.error("Failed to connect to Prometheus at %s: %s", self._base_url, exc)
             raise
-        except httpx.TimeoutException as exc:
-            logger.error("Prometheus query timed out: query=%s timeout=%ds", promql_query, self._timeout.read)
+        except httpx.TimeoutException:
+            logger.error(
+                "Prometheus query timed out: query=%s timeout=%ds",
+                promql_query,
+                self._timeout.read,
+            )
             raise
         except httpx.HTTPStatusError:
             raise
@@ -93,13 +100,13 @@ class PrometheusClient:
         step_sec: int,
     ) -> dict[str, Any]:
         """Execute a range PromQL query against /api/v1/query_range endpoint.
-        
+
         Args:
             promql_query: Valid PromQL expression string.
             start_ts: Start timestamp (Unix epoch).
             end_ts: End timestamp (Unix epoch).
             step_sec: Query resolution step width in seconds.
-        
+
         Returns:
             Raw JSON response dict with matrix vector data.
         """
@@ -118,7 +125,11 @@ class PrometheusClient:
 
             if payload.get("status") != "success":
                 error_msg = payload.get("error", "Unknown Prometheus error")
-                logger.error("Prometheus range query failed: query=%s error=%s", promql_query, error_msg)
+                logger.error(
+                    "Prometheus range query failed: query=%s error=%s",
+                    promql_query,
+                    error_msg,
+                )
                 raise httpx.HTTPStatusError(
                     message=f"Prometheus range query failed: {error_msg}",
                     request=response.request,
@@ -130,8 +141,12 @@ class PrometheusClient:
         except httpx.ConnectError as exc:
             logger.error("Failed to connect to Prometheus at %s: %s", self._base_url, exc)
             raise
-        except httpx.TimeoutException as exc:
-            logger.error("Prometheus range query timed out: query=%s timeout=%ds", promql_query, self._timeout.read)
+        except httpx.TimeoutException:
+            logger.error(
+                "Prometheus range query timed out: query=%s timeout=%ds",
+                promql_query,
+                self._timeout.read,
+            )
             raise
         except httpx.HTTPStatusError:
             raise

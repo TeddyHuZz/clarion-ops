@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import String, Integer, Text, DateTime
+
+from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db.session import Base
+
 
 class DeploymentEvent(Base):
     __tablename__ = "deployment_events"
@@ -10,12 +12,15 @@ class DeploymentEvent(Base):
     # Primary key is (time, service_name) for TimescaleDB compatibility
     time: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     service_name: Mapped[str] = mapped_column(String, primary_key=True)
-    
+
     commit_hash: Mapped[str] = mapped_column(String, nullable=False)
     author: Mapped[str] = mapped_column(Text, nullable=False)
     branch: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(Text, nullable=False)
-    risk_score: Mapped[Optional[int]] = mapped_column(Integer, default=0)
+    risk_score: Mapped[int | None] = mapped_column(Integer, default=0)
 
     def __repr__(self) -> str:
-        return f"<DeploymentEvent(service={self.service_name}, status={self.status}, time={self.time})>"
+        return (
+            f"<DeploymentEvent(service={self.service_name}, "
+            f"status={self.status}, time={self.time})>"
+        )

@@ -1,10 +1,14 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+
+from app.api.routers import deployments, escalations, incidents, security
 
 from .core.config import settings
 from .tasks.snapshot_worker import scheduler, setup_scheduler
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -17,11 +21,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler.shutdown()
     print(f"Shutting down {settings.PROJECT_NAME} and workers...")
 
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     lifespan=lifespan,
     docs_url="/docs",
-    openapi_url="/api/v1/openapi.json"
+    openapi_url="/api/v1/openapi.json",
 )
 
 # CORS configuration
@@ -33,25 +38,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.api.routers import deployments, security, incidents, escalations
-
 app.include_router(deployments.router, prefix="/api/v1/deployments", tags=["Deployments"])
 app.include_router(security.router, prefix="/api/v1/security", tags=["Security"])
 app.include_router(incidents.router, prefix="/api/v1/incidents", tags=["Incidents"])
 app.include_router(escalations.router, prefix="/api/v1/escalations", tags=["Escalations"])
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
     Standard service health endpoint for Kubernetes/Monitoring.
     """
-    return {
-        "status": "healthy",
-        "service": settings.PROJECT_NAME,
-        "version": "0.1.0"
-    }
+    return {"status": "healthy", "service": settings.PROJECT_NAME, "version": "0.1.0"}
+
 
 # Entry point for easier local execution
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8002)

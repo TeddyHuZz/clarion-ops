@@ -18,7 +18,7 @@ export const authMiddleware = async (req: Request, _res: Response, next: NextFun
 /**
  * Error Handler for Auth Failures
  */
-export const handleAuthError = (err: any, _req: Request, res: Response, _next: NextFunction) => {
+export const handleAuthError = (err: Error, _req: Request, res: Response) => {
   if (err.name === 'UnauthorizedError') {
     res.status(401).json({ error: 'Unauthorized: Invalid token' });
     return;

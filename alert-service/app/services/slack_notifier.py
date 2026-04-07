@@ -6,8 +6,8 @@ Uses Slack's Block Kit for rich, structured messages.
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 import httpx
 
@@ -19,14 +19,14 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Severity → visual indicator mapping
 # ---------------------------------------------------------------------------
-_SEVERITY_ICONS: Dict[str, str] = {
+_SEVERITY_ICONS: dict[str, str] = {
     "critical": "🚨",
     "warning": "⚠️",
     "info": "ℹ️",
 }
 
 
-def _build_slack_payload(incident_data: Dict[str, Any]) -> Dict[str, Any]:
+def _build_slack_payload(incident_data: dict[str, Any]) -> dict[str, Any]:
     """
     Construct a Slack Block Kit payload from raw incident data.
 
@@ -39,7 +39,7 @@ def _build_slack_payload(incident_data: Dict[str, Any]) -> Dict[str, Any]:
     severity = (incident_data.get("severity", "info") or "").lower()
     icon = _SEVERITY_ICONS.get(severity, "📢")
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     # --- Header section ---
     header_text = f"{icon}  *Incident Alert — {service_name}*"
@@ -58,7 +58,7 @@ def _build_slack_payload(incident_data: Dict[str, Any]) -> Dict[str, Any]:
         fields.append({"type": "mrkdwn", "text": f"*Title*\n{incident_data['title']}"})
 
     # --- Divider + description ---
-    blocks: List[Dict[str, Any]] = [
+    blocks: list[dict[str, Any]] = [
         {
             "type": "section",
             "text": {"type": "mrkdwn", "text": header_text},
@@ -94,7 +94,7 @@ def _build_slack_payload(incident_data: Dict[str, Any]) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
-async def send_slack_alert(incident_data: Dict[str, Any]) -> bool:
+async def send_slack_alert(incident_data: dict[str, Any]) -> bool:
     """
     Post an incident alert to the configured Slack Incoming Webhook.
 

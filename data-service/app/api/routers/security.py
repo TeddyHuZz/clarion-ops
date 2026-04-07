@@ -1,36 +1,42 @@
 from datetime import datetime
-from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.session import async_session
 from app.models.cves import CVEScan
 
 router = APIRouter()
+
 
 # Dependency for database session
 async def get_db():
     async with async_session() as session:
         yield session
 
+
 class CVECreate(BaseModel):
     """Schema for individual CVE scan result entry."""
+
     time: datetime = Field(default_factory=datetime.utcnow)
     commit_hash: str
     cve_id: str
     severity: str
     package_name: str
-    fixed_version: Optional[str] = None
+    fixed_version: str | None = None
 
 
 class CVEScanResponse(CVECreate):
     """Response model that includes the database ID."""
+
     id: int
+
 
 @router.post("/scans", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def bulk_ingest_cves(
-    cves: List[CVECreate],
-    db: AsyncSession = Depends(get_db)
+    cves: list[CVECreate],
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ):
     """
     Bulk ingest CVE scan results for a specific commit.
@@ -44,36 +50,40 @@ async def bulk_ingest_cves(
                 cve_id=entry.cve_id,
                 severity=entry.severity,
                 package_name=entry.package_name,
-                fixed_version=entry.fixed_version
-            ) for entry in cves
+                fixed_version=entry.fixed_version,
+            )
+            for entry in cves
         ]
-        
+
         db.add_all(db_entries)
         await db.commit()
-        
+
         return {
-            "status": "success", 
+            "status": "success",
             "records_ingested": len(db_entries),
-            "commit_hash": cves[0].commit_hash if cves else "N/A"
+            "commit_hash": cves[0].commit_hash if cves else "N/A",
         }
     except Exception as e:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Bulk ingestion failed: {str(e)}"
-        )
+            detail=f"Bulk ingestion failed: {str(e)}",
+        ) from e
 
-@router.get("/scans/{commit_hash}", response_model=List[CVEScanResponse])
+
+@router.get("/scans/{commit_hash}", response_model=list[CVEScanResponse])
 async def get_cves_by_commit(
     commit_hash: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),  # noqa: B008
 ):
     """
     Retrieve all security vulnerability scan results for a specific commit.
     """
     from sqlalchemy import select
 
-    query = select(CVEScan).where(CVEScan.commit_hash == commit_hash).order_by(CVEScan.severity.desc())
+    query = (
+        select(CVEScan).where(CVEScan.commit_hash == commit_hash).order_by(CVEScan.severity.desc())
+    )
     result = await db.execute(query)
     scans = result.scalars().all()
 
@@ -86,7 +96,7 @@ async def get_cves_by_commit(
             cve_id=s.cve_id,
             severity=s.severity,
             package_name=s.package_name,
-            fixed_version=s.fixed_version
+            fixed_version=s.fixed_version,
         )
         for s in scans
     ]

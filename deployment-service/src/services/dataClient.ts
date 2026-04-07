@@ -14,6 +14,15 @@ export interface DeploymentPayload {
   time?: string;
 }
 
+export interface CVEScanPayload {
+  time: string;
+  commit_hash: string;
+  cve_id: string;
+  severity: string;
+  package_name: string;
+  fixed_version: string;
+}
+
 /**
  * Sends a deployment event to the centralized data-service.
  * This is an internal fire-and-forget call from the webhook controller.
@@ -46,7 +55,7 @@ export const reportDeployment = async (payload: DeploymentPayload): Promise<void
  * Sends a bulk list of CVE scan results to the data-service.
  * Optimized for container security scanners (Trivy).
  */
-export const bulkReportCVEs = async (payloads: DeploymentPayload[]): Promise<void> => {
+export const bulkReportCVEs = async (payloads: CVEScanPayload[]): Promise<void> => {
   if (payloads.length === 0) return;
 
   const SECURITY_INGEST_URL = (process.env['DATA_SERVICE_URL'] || 'http://localhost:8002/api/v1/') + 'security/scans';

@@ -1,9 +1,10 @@
+from typing import Any
+
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import jwt, JWTError
-from jose.exceptions import ExpiredSignatureError, JWTClaimsError
 from httpx import AsyncClient
-from typing import Optional
+from jose import JWTError, jwt
+from jose.exceptions import ExpiredSignatureError, JWTClaimsError
 
 from app.core.config import settings
 
@@ -13,7 +14,7 @@ security = HTTPBearer(auto_error=False)
 # ---------------------------------------------------------------------------
 # JWKS cache — fetch once and reuse across requests
 # ---------------------------------------------------------------------------
-_jwks_cache: Optional[dict] = None
+_jwks_cache: dict[str, Any] | None = None
 
 
 async def _fetch_jwks() -> dict:
@@ -31,7 +32,7 @@ async def _fetch_jwks() -> dict:
 # Dependency — verifies a Clerk JWT and returns the decoded payload
 # ---------------------------------------------------------------------------
 async def verify_clerk_jwt(
-    credentials: HTTPAuthorizationCredentials = Security(security),
+    credentials: HTTPAuthorizationCredentials = Security(security),  # noqa: B008
 ) -> dict:
     """
     Placeholder Clerk JWT verification dependency.
@@ -75,29 +76,30 @@ async def verify_clerk_jwt(
                 detail="Unable to find matching signing key",
             )
 
+        issuer = settings.CLERK_JWT_ISSUER.split("/.well-known")[0]
         payload = jwt.decode(
             token,
             key,
             algorithms=["RS256"],
-            audience=settings.CLERK_JWT_ISSUER.split("/.well-known")[0] if "/.well-known" in settings.CLERK_JWT_ISSUER else settings.CLERK_JWT_ISSUER,
+            audience=issuer,
             issuer=settings.CLERK_JWT_ISSUER,
         )
         return payload
 
-    except ExpiredSignatureError:
+    except ExpiredSignatureError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
-        )
-    except JWTClaimsError:
+        ) from err
+    except JWTClaimsError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token claims",
-        )
-    except JWTError:
+        ) from err
+    except JWTError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
-        )
+        ) from err
     except HTTPException:
         raise

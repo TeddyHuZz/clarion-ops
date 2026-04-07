@@ -8,7 +8,7 @@ automated root cause analysis.
 
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from groq import AsyncGroq
 
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Groq Client Initialization
 # ---------------------------------------------------------------------------
+
 
 def _get_groq_client() -> AsyncGroq:
     """
@@ -38,7 +39,7 @@ def _get_groq_client() -> AsyncGroq:
 # Default Fallback Response
 # ---------------------------------------------------------------------------
 
-DEFAULT_FALLBACK: Dict[str, Any] = {
+DEFAULT_FALLBACK: dict[str, Any] = {
     "root_cause_summary": "AI analysis failed due to an unexpected error. Human review required.",
     "confidence_score": 0,
     "recommended_action": "escalate",
@@ -59,7 +60,8 @@ SYSTEM_PROMPT = (
 # Core RCA Function
 # ---------------------------------------------------------------------------
 
-async def run_groq_rca(ai_context_payload: Dict[str, Any]) -> Dict[str, Any]:
+
+async def run_groq_rca(ai_context_payload: dict[str, Any]) -> dict[str, Any]:
     """
     Send enriched incident context to Groq's llama3-70b-8192 model for
     Root Cause Analysis.
@@ -115,7 +117,7 @@ async def run_groq_rca(ai_context_payload: Dict[str, Any]) -> Dict[str, Any]:
         if cleaned.startswith("```"):
             cleaned = cleaned.split("```", 2)[-2] if cleaned.count("```") >= 2 else cleaned
         if cleaned.startswith("```json"):
-            cleaned = cleaned[len("```json"):]
+            cleaned = cleaned[len("```json") :]
         cleaned = cleaned.strip()
 
         result = json.loads(cleaned)

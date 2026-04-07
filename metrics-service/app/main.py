@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import metrics, logs
+from app.api.routers import logs, metrics
 from app.config import settings
 from app.services.prometheus_client import PrometheusClient
 
@@ -30,7 +30,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Clarion Ops Metrics Service",
-    description="Microservice for fetching Kubernetes resource metrics and pod health via Prometheus.",
+    description=(
+        "Microservice for fetching Kubernetes resource metrics and pod health via Prometheus."
+    ),
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -57,6 +59,7 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host=settings.service_host,

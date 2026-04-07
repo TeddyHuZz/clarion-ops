@@ -1,13 +1,13 @@
 import asyncio
 import logging
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
 from app.api.routers import alerts, auth, webhooks
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +30,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Shutdown: cancel the worker and wait for in-flight tasks
     if _worker_task:
         _worker_task.cancel()
-        try:
+        with suppress(asyncio.CancelledError):
             await _worker_task
-        except asyncio.CancelledError:
-            pass
         logger.info("[lifespan] AI orchestration worker stopped")
 
     # Drain any remaining items in the queue (best-effort)

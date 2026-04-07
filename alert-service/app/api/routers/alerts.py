@@ -1,6 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel, Field
-from typing import Optional
 
 from app.services.slack_notifier import send_slack_alert
 
@@ -9,10 +8,11 @@ router = APIRouter()
 
 class AlertIngest(BaseModel):
     """Payload accepted from external monitors (PagerDuty, Datadog, etc.)."""
+
     service_name: str = Field(..., description="Affected service identifier")
     severity: str = Field(..., description="critical | warning | info")
-    title: Optional[str] = None
-    description: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
     status: str = Field(default="Open")
 
 

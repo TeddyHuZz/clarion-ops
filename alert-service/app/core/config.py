@@ -1,6 +1,5 @@
-from pydantic_settings import BaseSettings
 from pydantic import AnyHttpUrl
-from typing import List, Optional
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -26,10 +25,10 @@ class Settings(BaseSettings):
     DATA_SERVICE_URL: str = "http://localhost:8002"
 
     # Slack Incoming Webhook URL for ChatOps notifications
-    SLACK_WEBHOOK_URL: Optional[str] = None
+    SLACK_WEBHOOK_URL: str | None = None
 
     # Groq API Key for LLM-powered Root Cause Analysis
-    GROQ_API_KEY: Optional[str] = None
+    GROQ_API_KEY: str | None = None
 
     class Config:
         env_file = ".env"

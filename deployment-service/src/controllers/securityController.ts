@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { bulkReportCVEs } from '../services/dataClient.js';
-import type { DeploymentPayload } from '../services/dataClient.js';
+import type { CVEScanPayload } from '../services/dataClient.js';
 
 /**
  * Controller for Trivy Security Scan Webhooks.
@@ -27,26 +27,31 @@ export const handleTrivyWebhook = async (req: Request, res: Response) => {
 
     // 2. Parse and filter vulnerabilities
     const results = payload.Results || [];
-    const vulnerabilities: DeploymentPayload[] = [];
+    const vulnerabilities: CVEScanPayload[] = [];
     const timestamp = new Date().toISOString();
 
     const SEVERITY_THRESHOLD = ['MEDIUM', 'HIGH', 'CRITICAL'];
 
-    results.forEach((result: any) => {
+    results.forEach((result: { Vulnerabilities?: Array<{
+      VulnerabilityID: string;
+      Severity: string;
+      PkgName: string;
+      FixedVersion?: string;
+    }> }) => {
       if (result.Vulnerabilities) {
-        result.Vulnerabilities.forEach((vuln: any) => {
+        result.Vulnerabilities.forEach((vuln) => {
           const severity = (vuln.Severity || '').toUpperCase();
-          
+
           // Apply filtering logic (severity >= MEDIUM)
           if (SEVERITY_THRESHOLD.includes(severity)) {
             vulnerabilities.push({
               time: timestamp,
-              commit_hash: commit_hash,
+              commit_hash,
               cve_id: vuln.VulnerabilityID,
-              severity: severity,
+              severity,
               package_name: vuln.PkgName,
-              fixed_version: vuln.FixedVersion || 'none'
-            } as any); // Type cast since DeploymentPayload is recycled for simplicity
+              fixed_version: vuln.FixedVersion || 'none',
+            });
           }
         });
       }

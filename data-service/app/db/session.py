@@ -1,6 +1,7 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
-from typing import AsyncGenerator
 
 from ..core.config import settings
 
@@ -14,24 +15,22 @@ if database_url.startswith("postgresql://"):
 # pool_size and max_overflow should be tuned for production load
 engine = create_async_engine(
     database_url,
-    echo=False, # Set to True for SQL debug logging
+    echo=False,  # Set to True for SQL debug logging
     future=True,
-    pool_pre_ping=True
+    pool_pre_ping=True,
 )
 
 # 3. Session Factory
 # Expire_on_commit=False prevents unwanted lookups after session closes
 async_session = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False
+    bind=engine, class_=AsyncSession, expire_on_commit=False, autocommit=False, autoflush=False
 )
+
 
 # 4. Global Declarative Base
 class Base(DeclarativeBase):
     pass
+
 
 # 5. Dependency for FastAPI
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

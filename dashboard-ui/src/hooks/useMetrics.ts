@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useEnvironment } from '../contexts/EnvironmentContext';
+import { formatTime } from '../lib/time';
 
 const API_BASE_URL = import.meta.env.VITE_METRICS_API_URL || 'http://localhost:8001/api/v1/metrics';
 
 export interface MetricDataPoint {
-  timestamp: string;
+  timestamp: string | number;
   value: number;
 }
 
@@ -87,14 +88,14 @@ export function useMetrics(podName: string, pollInterval: number = 5000) {
       if (Array.isArray(cpuData) && cpuData.length > 1) {
         // Range query returns multiple points -> Replace history
         setCpuHistory(cpuData.map((d: MetricDataPoint) => ({
-          timestamp: d.timestamp,
+          timestamp: formatTime(d.timestamp),
           value: d.value * 100,
         })));
         setCpuLoad(cpuData[cpuData.length - 1].value * 100);
       } else if (cpuData.length > 0) {
         // Instant query returns single point -> Append to history
         const value = cpuData[0].value * 100;
-        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const now = formatTime(new Date());
         setCpuLoad(value);
         setCpuHistory(prev => [...prev.slice(-(MAX_HISTORY - 1)), { timestamp: now, value }]);
       } else {
@@ -105,14 +106,14 @@ export function useMetrics(podName: string, pollInterval: number = 5000) {
       if (Array.isArray(memData) && memData.length > 1) {
         // Range query -> Replace history
         setMemoryHistory(memData.map((d: MetricDataPoint) => ({
-          timestamp: d.timestamp,
+          timestamp: formatTime(d.timestamp),
           value: d.value / (1024 * 1024),
         })));
         setMemoryUsage(memData[memData.length - 1].value / (1024 * 1024));
       } else if (memData.length > 0) {
         // Instant query -> Append to history
         const value = memData[0].value / (1024 * 1024);
-        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const now = formatTime(new Date());
         setMemoryUsage(value);
         setMemoryHistory(prev => [...prev.slice(-(MAX_HISTORY - 1)), { timestamp: now, value }]);
       } else {

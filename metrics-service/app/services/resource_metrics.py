@@ -85,7 +85,7 @@ async def get_cpu_usage(namespace: str, pod: str, range: str | None = None) -> M
 
         values = result[0].get("values", [])
         return [
-            {"timestamp": datetime.fromtimestamp(ts).strftime("%H:%M:%S"), "value": float(val)}
+            {"timestamp": ts, "value": float(val)}
             for ts, val in values
         ]
 
@@ -119,7 +119,7 @@ async def get_memory_usage(namespace: str, pod: str, range: str | None = None) -
 
         values = result[0].get("values", [])
         return [
-            {"timestamp": datetime.fromtimestamp(ts).strftime("%H:%M:%S"), "value": float(val)}
+            {"timestamp": ts, "value": float(val)}
             for ts, val in values
         ]
 

@@ -114,12 +114,12 @@ jobs:
       # --- Lint ---
       - name: ESLint
         working-directory: ${{ matrix.path }}
-        run: pnpm run lint --if-present
+        run: pnpm run lint
 
       # --- Type check ---
       - name: TypeScript type check
         working-directory: ${{ matrix.path }}
-        run: npx tsc --noEmit
+        run: pnpm tsc --noEmit
 
       # --- Build ---
       - name: Build (dashboard-ui)

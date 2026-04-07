@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import metrics
+from app.api.routers import metrics, logs
 from app.config import settings
 from app.services.prometheus_client import PrometheusClient
 
@@ -46,6 +46,7 @@ app.add_middleware(
 
 # Register Routers
 app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["metrics"])
+app.include_router(logs.router, prefix="/api/v1/logs", tags=["logs"])
 
 
 @app.get("/health")

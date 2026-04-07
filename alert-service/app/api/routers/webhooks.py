@@ -28,6 +28,11 @@ logger = logging.getLogger(__name__)
 # Global alert queue (alert-storm protection)
 # ---------------------------------------------------------------------------
 alert_queue: asyncio.Queue[tuple[int, Dict[str, Any]]] = asyncio.Queue()
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+METRICS_SERVICE_URL = "http://metrics-service:8001"
 DATA_BASE = f"{settings.DATA_SERVICE_URL}/api/v1"
 
 # HTTP headers for internal service-to-service calls
@@ -41,11 +46,21 @@ INTERNAL_HEADERS = {
 # AI Simulation
 # ---------------------------------------------------------------------------
 
-async def run_groq_rca(incident_data: Dict[str, Any]) -> int:
+async def run_groq_rca(ai_context_payload: Dict[str, Any]) -> int:
     """
     Placeholder for Groq-powered Root Cause Analysis.
+    Accepts an enriched context payload containing alert details,
+    container logs, and deployment history.
     Simulates LLM latency and returns a confidence score (50–100).
     """
+    # Log what context we received (for debugging)
+    service = ai_context_payload.get("service_name", "unknown")
+    has_logs = bool(ai_context_payload.get("pod_logs"))
+    has_deployment = bool(ai_context_payload.get("last_deployment"))
+    logger.info(
+        "[groq-rca] Analyzing incident for %s — logs: %s, deployment_info: %s",
+        service, has_logs, has_deployment,
+    )
     await asyncio.sleep(3)
     return random.randint(50, 100)
 
@@ -97,6 +112,57 @@ async def _patch_status(
         logger.error("[ai-orchestrator] PATCH failed for %d: %s", incident_id, exc)
     return False
 
+
+# ---------------------------------------------------------------------------
+# Context Aggregation
+# ---------------------------------------------------------------------------
+
+async def _fetch_context(
+    client: httpx.AsyncClient,
+    service_name: str,
+    pod_name: str,
+) -> Dict[str, Any]:
+    """
+    Concurrently fetch pod logs and latest deployment info.
+    Returns a context dictionary for the AI analysis engine.
+    """
+    logs_task = client.get(
+        f"{METRICS_SERVICE_URL}/api/v1/logs/default/{pod_name}",
+        headers=INTERNAL_HEADERS,
+        timeout=10,
+    )
+
+    deployment_task = client.get(
+        f"{DATA_BASE}/deployments/latest",
+        params={"service_name": service_name},
+        headers=INTERNAL_HEADERS,
+        timeout=10,
+    )
+
+    logs_resp, deploy_resp = await asyncio.gather(
+        logs_task, deployment_task, return_exceptions=True,
+    )
+
+    # Parse logs
+    pod_logs = ""
+    if isinstance(logs_resp, httpx.Response) and logs_resp.status_code == 200:
+        data = logs_resp.json()
+        pod_logs = data.get("logs", "")
+    elif isinstance(logs_resp, Exception):
+        logger.warning("[context] Failed to fetch logs for %s: %s", pod_name, logs_resp)
+
+    # Parse deployment info
+    last_deployment: Dict[str, Any] | None = None
+    if isinstance(deploy_resp, httpx.Response) and deploy_resp.status_code == 200:
+        last_deployment = deploy_resp.json()
+    elif isinstance(deploy_resp, Exception):
+        logger.warning("[context] Failed to fetch deployment for %s: %s", service_name, deploy_resp)
+
+    return {
+        "pod_logs": pod_logs,
+        "last_deployment": last_deployment,
+    }
+
 # ---------------------------------------------------------------------------
 # AI Orchestration Pipeline
 # ---------------------------------------------------------------------------
@@ -107,23 +173,44 @@ async def _process_incident(
     incident_data: Dict[str, Any],
 ) -> None:
     """
-    Self-healing state machine:
+    Self-healing state machine with Context Aggregation:
 
         Open → AI Investigating → [Resolved | Manual Intervention]
+
+    Before AI analysis, we enrich the incident with:
+    - Last 100 lines of pod logs (from metrics-service)
+    - Most recent deployment info (from data-service)
     """
     service_name = incident_data["service_name"]
+    pod_name = incident_data.get("raw_payload", {}).get("labels", {}).get("pod") or service_name
 
     # Step 2: Immediately transition to AI Investigating
     await _patch_status(client, incident_id, "AI Investigating")
 
-    # Step 3: Run AI analysis
-    confidence = await run_groq_rca(incident_data)
+    # Step 3: Context Aggregation — fetch logs + deployment concurrently
+    print(f"[ai-orchestrator] Fetching context for incident {incident_id} (service={service_name}, pod={pod_name})", flush=True)
+    context = await _fetch_context(client, service_name, pod_name)
+    print(f"[ai-orchestrator] Context fetched — logs: {len(context.get('pod_logs', ''))} chars, deployment: {bool(context.get('last_deployment'))}", flush=True)
+
+    # Build the enriched payload for the LLM
+    ai_context_payload = {
+        "incident_id": incident_id,
+        "service_name": service_name,
+        "pod_name": pod_name,
+        "severity": incident_data.get("severity"),
+        "alert_name": incident_data.get("raw_payload", {}).get("alertname"),
+        "alert_summary": incident_data.get("title"),
+        **context,  # pod_logs, last_deployment
+    }
+
+    # Step 4: Run AI analysis with enriched context
+    confidence = await run_groq_rca(ai_context_payload)
     logger.info(
         "[ai-orchestrator] Incident %d confidence_score=%d%%",
         incident_id, confidence,
     )
 
-    # Step 4: Route based on confidence threshold
+    # Step 5: Route based on confidence threshold
     if confidence > 85:
         logger.info(
             "[ai-orchestrator] Auto-remediation triggered for incident %d",

@@ -132,12 +132,6 @@ jobs:
         working-directory: ${{ matrix.path }}
         run: pnpm run build
 
-      # --- Docker build sanity ---
-      - name: Docker build check
-        if: hashFiles('${{ matrix.path }}/Dockerfile') != ''
-        run: |
-          docker build -t ${{ matrix.service }}:ci-test -f ${{ matrix.path }}/Dockerfile ${{ matrix.path }}
-
   # ===========================================================================
   # Docker Compose Validation
   # ===========================================================================

@@ -101,28 +101,20 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      # --- pnpm for deployment-service, npm for dashboard-ui ---
-      - name: Setup pnpm (deployment-service)
-        if: matrix.service == 'deployment-service'
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
 
       # --- Install dependencies ---
-      - name: Install dependencies (dashboard-ui)
-        if: matrix.service == 'dashboard-ui'
-        working-directory: ${{ matrix.path }}
-        run: npm ci
-
-      - name: Install dependencies (deployment-service)
-        if: matrix.service == 'deployment-service'
+      - name: Install dependencies
         working-directory: ${{ matrix.path }}
         run: pnpm install --frozen-lockfile
 
       # --- Lint ---
       - name: ESLint
         working-directory: ${{ matrix.path }}
-        run: npm run lint --if-present || pnpm run lint --if-present
+        run: pnpm run lint --if-present
 
       # --- Type check ---
       - name: TypeScript type check
@@ -133,7 +125,7 @@ jobs:
       - name: Build (dashboard-ui)
         if: matrix.service == 'dashboard-ui'
         working-directory: ${{ matrix.path }}
-        run: npm run build
+        run: pnpm run build
 
       - name: Build (deployment-service)
         if: matrix.service == 'deployment-service'

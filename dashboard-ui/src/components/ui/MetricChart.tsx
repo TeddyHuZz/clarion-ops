@@ -12,7 +12,7 @@ import { Card } from './card';
 
 interface MetricChartProps {
   title: string;
-  data: Record<string, unknown>[];
+  data: object[];
   dataKey: string;
   color: string;
   unit?: string;

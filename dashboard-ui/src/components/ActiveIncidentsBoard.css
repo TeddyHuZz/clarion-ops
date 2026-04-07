@@ -1,0 +1,246 @@
+/* ---------------------------------------------------------------------------
+ * Kanban Board
+ * --------------------------------------------------------------------------- */
+
+.kanban-board {
+  display: flex;
+  gap: 24px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+}
+
+.kanban-board::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ---------------------------------------------------------------------------
+ * Column
+ * --------------------------------------------------------------------------- */
+
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 200px;
+  min-width: 320px;
+  max-width: 320px;
+  flex-shrink: 0;
+}
+
+.kanban-column__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--surface-border);
+}
+
+.kanban-column__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.kanban-column__count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.kanban-column__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.kanban-column__empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 32px 0;
+  text-align: center;
+}
+
+.incident-card-wrapper {
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+ * Incident Card
+ * --------------------------------------------------------------------------- */
+
+.incident-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.incident-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.incident-card__service {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.incident-card__severity {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: #1a1a2e;
+}
+
+.incident-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.incident-card__oncall {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.incident-card__actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--surface-border);
+}
+
+.incident-card__action-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.incident-card__action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Loading / Error
+ * --------------------------------------------------------------------------- */
+
+.kanban-loading,
+.kanban-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.kanban-loading p,
+.kanban-error p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.kanban-error p {
+  color: #fb7185;
+}
+
+/* ---------------------------------------------------------------------------
+ * Incident Detail Modal
+ * --------------------------------------------------------------------------- */
+
+.incident-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.incident-detail__service-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.incident-detail__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.incident-detail__label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  min-width: 80px;
+}
+
+.incident-detail__value {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.incident-detail__severity {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 12px;
+  border-radius: 999px;
+  color: #1a1a2e;
+}
+
+.incident-detail__payload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--surface-border);
+}
+
+.incident-detail__pre {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  overflow-x: auto;
+  max-height: 200px;
+}

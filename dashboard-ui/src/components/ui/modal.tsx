@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import './ui.css';
 import { Button } from './button';
@@ -12,14 +12,25 @@ interface ModalProps {
   className?: string;
 }
 
-export const Modal: React.FC<ModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
   footer,
   className = ''
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (

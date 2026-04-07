@@ -15,7 +15,7 @@ class IncidentEvent(Base):
     """
     __tablename__ = "incident_events"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, nullable=False)
     time: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True, nullable=False)
     service_name: Mapped[str] = mapped_column(Text, nullable=False)
     severity: Mapped[str] = mapped_column(Text, nullable=False)

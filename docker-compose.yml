@@ -111,7 +111,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data-service/sql/init_metrics.sql:/docker-entrypoint-initdb.d/init_metrics.sql
+      - ./data-service/sql/init_metrics.sql:/docker-entrypoint-initdb.d/01_init_metrics.sql
+      - ./data-service/sql/init_incidents.sql:/docker-entrypoint-initdb.d/02_init_incidents.sql
+      - ./data-service/sql/init_deployments.sql:/docker-entrypoint-initdb.d/03_init_deployments.sql
+      - ./data-service/sql/init_cve_scans.sql:/docker-entrypoint-initdb.d/04_init_cve_scans.sql
+      - ./data-service/sql/init_escalation_policies.sql:/docker-entrypoint-initdb.d/05_init_escalation_policies.sql
+      - ./data-service/sql/risk_audit_migration.sql:/docker-entrypoint-initdb.d/06_risk_audit_migration.sql
     networks:
       - clarion-net
 

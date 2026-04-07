@@ -33,11 +33,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.api.routers import deployments, security, incidents
+from app.api.routers import deployments, security, incidents, escalations
 
 app.include_router(deployments.router, prefix="/api/v1/deployments", tags=["Deployments"])
 app.include_router(security.router, prefix="/api/v1/security", tags=["Security"])
 app.include_router(incidents.router, prefix="/api/v1/incidents", tags=["Incidents"])
+app.include_router(escalations.router, prefix="/api/v1/escalations", tags=["Escalations"])
 
 @app.get("/health", tags=["Health"])
 async def health_check():

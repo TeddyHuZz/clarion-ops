@@ -13,16 +13,20 @@ import {
   Database,
   Globe,
   RefreshCcw,
+  AlertTriangle,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { SignOutButton, UserButton } from "@clerk/react";
 import "./Dashboard.css";
-import { 
-  StatCard, 
-  Button, 
-  Badge, 
-  Modal 
+import {
+  StatCard,
+  Button,
+  Badge,
+  Modal
 } from "./ui";
 import { EnvironmentSwitcher } from "./EnvironmentSwitcher";
+import { ActiveIncidentsBoard } from "./ActiveIncidentsBoard";
 import { useState } from "react";
 import { useMetrics } from "../hooks/useMetrics";
 import { MetricChart } from "./ui/MetricChart";
@@ -31,11 +35,12 @@ import { SlaCard } from "./ui/SlaCard";
 import { DependencyMap } from "./ui/DependencyMap";
 import { DeploymentHistoryTable } from "./ui/DeploymentHistoryTable";
 
-type DashboardView = 'overview' | 'pipelines' | 'security' | 'secrets' | 'settings';
+type DashboardView = 'overview' | 'incidents' | 'pipelines' | 'security' | 'secrets' | 'settings';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<DashboardView>('overview');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { 
     cpuLoad, cpuHistory,
     memoryUsage, memoryHistory,
@@ -63,6 +68,17 @@ export function Dashboard() {
               <Badge variant="success">Synchronized with Node Hub</Badge>
             </div>
             <DeploymentHistoryTable />
+          </section>
+        );
+
+      case 'incidents':
+        return (
+          <section className="dashboard-section" style={{ marginTop: '2rem' }}>
+            <div className="dashboard-section__header">
+              <h2>Active Incidents</h2>
+              <Badge variant="error">Live Feed</Badge>
+            </div>
+            <ActiveIncidentsBoard />
           </section>
         );
       
@@ -146,35 +162,40 @@ export function Dashboard() {
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
-      <aside className="dashboard-sidebar">
+      <aside className={`dashboard-sidebar ${sidebarCollapsed ? 'dashboard-sidebar--collapsed' : ''}`}>
         <div className="dashboard-sidebar__logo">
           <Shield size={24} color="#8de3ff" />
-          <span>Clarion Ops</span>
+          {!sidebarCollapsed && <span>Clarion Ops</span>}
         </div>
 
         <nav className="dashboard-nav">
           <button
             onClick={() => setActiveView('overview')}
             className={`dashboard-nav__item ${activeView === 'overview' ? 'dashboard-nav__item--active' : ''}`}
+            title="Dashboard"
           >
             <LayoutDashboard size={20} />
-            Dashboard
+            {!sidebarCollapsed && 'Dashboard'}
           </button>
-          <button onClick={() => setActiveView('security')} className={`dashboard-nav__item ${activeView === 'security' ? 'dashboard-nav__item--active' : ''}`}>
+          <button onClick={() => setActiveView('incidents')} className={`dashboard-nav__item ${activeView === 'incidents' ? 'dashboard-nav__item--active' : ''}`} title="Incidents">
+            <AlertTriangle size={20} />
+            {!sidebarCollapsed && 'Incidents'}
+          </button>
+          <button onClick={() => setActiveView('security')} className={`dashboard-nav__item ${activeView === 'security' ? 'dashboard-nav__item--active' : ''}`} title="Security">
             <ShieldAlert size={20} />
-            Security
+            {!sidebarCollapsed && 'Security'}
           </button>
-          <button onClick={() => setActiveView('pipelines')} className={`dashboard-nav__item ${activeView === 'pipelines' ? 'dashboard-nav__item--active' : ''}`}>
+          <button onClick={() => setActiveView('pipelines')} className={`dashboard-nav__item ${activeView === 'pipelines' ? 'dashboard-nav__item--active' : ''}`} title="Pipelines">
             <GitBranch size={20} />
-            Pipelines
+            {!sidebarCollapsed && 'Pipelines'}
           </button>
-          <button onClick={() => setActiveView('secrets')} className={`dashboard-nav__item ${activeView === 'secrets' ? 'dashboard-nav__item--active' : ''}`}>
+          <button onClick={() => setActiveView('secrets')} className={`dashboard-nav__item ${activeView === 'secrets' ? 'dashboard-nav__item--active' : ''}`} title="Secrets">
             <Lock size={20} />
-            Secrets
+            {!sidebarCollapsed && 'Secrets'}
           </button>
-          <button onClick={() => setActiveView('settings')} className={`dashboard-nav__item ${activeView === 'settings' ? 'dashboard-nav__item--active' : ''}`}>
+          <button onClick={() => setActiveView('settings')} className={`dashboard-nav__item ${activeView === 'settings' ? 'dashboard-nav__item--active' : ''}`} title="Settings">
             <Settings size={20} />
-            Settings
+            {!sidebarCollapsed && 'Settings'}
           </button>
         </nav>
 
@@ -185,11 +206,25 @@ export function Dashboard() {
               style={{ width: "100%", justifyContent: "flex-start", padding: '12px 16px' }}
             >
               <LogOut size={20} />
-              Sign Out
+              {!sidebarCollapsed && 'Sign Out'}
             </Button>
           </SignOutButton>
         </div>
+
+        {/* Collapse toggle button */}
+        <button
+          className="dashboard-sidebar__collapse-btn"
+          onClick={() => setSidebarCollapsed(prev => !prev)}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        </button>
       </aside>
+
+      {/* Collapse indicator bar (visible when collapsed) */}
+      {sidebarCollapsed && (
+        <div className="dashboard-sidebar__indicator" onClick={() => setSidebarCollapsed(false)} />
+      )}
 
       {/* Main Content */}
       <main className="dashboard-main">
@@ -199,7 +234,11 @@ export function Dashboard() {
             <EnvironmentSwitcher />
             <div className="dashboard-header__title">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <h1>{activeView === 'pipelines' ? 'Pipeline Audit Log' : 'Intelligence Overview'}</h1>
+                <h1>
+                  {activeView === 'pipelines' ? 'Pipeline Audit Log' :
+                   activeView === 'incidents' ? 'Incident Response' :
+                   'Intelligence Overview'}
+                </h1>
                 {health ? (
                   <Badge variant={health.state.toLowerCase() === 'running' ? 'success' : 'warning'}>
                     {health.state} • {health.restarts} restarts
@@ -213,8 +252,10 @@ export function Dashboard() {
                 )}
               </div>
               <p>
-                {activeView === 'pipelines' 
-                  ? 'Historical audit of service deployments and pipeline events.' 
+                {activeView === 'pipelines'
+                  ? 'Historical audit of service deployments and pipeline events.'
+                  : activeView === 'incidents'
+                  ? 'Real-time incident tracking with escalation routing.'
                   : 'Real-time telemetry and resource performance analysis.'}
               </p>
             </div>

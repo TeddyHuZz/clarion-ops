@@ -3,8 +3,10 @@ Slack ChatOps Notifier
 ======================
 Sends formatted incident alerts to a Slack channel via Incoming Webhook.
 Uses Slack's Block Kit for rich, structured messages.
+Supports interactive approval buttons for human-fallback scenarios.
 """
 
+import json
 import logging
 from datetime import UTC, datetime
 from typing import Any
@@ -26,7 +28,10 @@ _SEVERITY_ICONS: dict[str, str] = {
 }
 
 
-def _build_slack_payload(incident_data: dict[str, Any]) -> dict[str, Any]:
+def _build_slack_payload(
+    incident_data: dict[str, Any],
+    needs_approval: bool = False,
+) -> dict[str, Any]:
     """
     Construct a Slack Block Kit payload from raw incident data.
 
@@ -34,6 +39,8 @@ def _build_slack_payload(incident_data: dict[str, Any]) -> dict[str, Any]:
         service_name  — affected service
         severity      — critical | warning | info
         title / status / description — optional context
+        incident_id   — used for interactive button actions
+        commit_hash   — used for rollback button payload
     """
     service_name = incident_data.get("service_name", "unknown-service")
     severity = (incident_data.get("severity", "info") or "").lower()
@@ -78,6 +85,53 @@ def _build_slack_payload(incident_data: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
+    # --- Interactive approval buttons ---
+    if needs_approval:
+        incident_id = incident_data.get("incident_id", 0)
+        commit_hash = incident_data.get("commit_hash", "")
+
+        approve_value = json.dumps(
+            {
+                "incident_id": incident_id,
+                "commit": commit_hash,
+                "service": service_name,
+            }
+        )
+        escalate_value = json.dumps({"incident_id": incident_id})
+
+        blocks.append({"type": "divider"})
+        blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Action Required:* AI recommends rollback. "
+                    "Please review and take action.",
+                },
+            }
+        )
+        blocks.append(
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "✓ Approve Rollback"},
+                        "style": "primary",
+                        "action_id": "approve_rollback",
+                        "value": approve_value,
+                    },
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "⚠ Escalate (Acknowledge)"},
+                        "style": "danger",
+                        "action_id": "escalate_human",
+                        "value": escalate_value,
+                    },
+                ],
+            }
+        )
+
     # --- Footer with clarion branding ---
     blocks.append(
         {
@@ -94,9 +148,15 @@ def _build_slack_payload(incident_data: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
-async def send_slack_alert(incident_data: dict[str, Any]) -> bool:
+async def send_slack_alert(
+    incident_data: dict[str, Any],
+    needs_approval: bool = False,
+) -> bool:
     """
     Post an incident alert to the configured Slack Incoming Webhook.
+
+    When *needs_approval* is True, interactive Block Kit buttons are
+    appended so on-call engineers can approve rollbacks or escalate.
 
     Returns ``True`` on successful delivery, ``False`` on any failure.
     Failures are logged but **never** raised — this function must not
@@ -107,7 +167,7 @@ async def send_slack_alert(incident_data: dict[str, Any]) -> bool:
         logger.warning("[slack-notifier] SLACK_WEBHOOK_URL not configured — skipping notification")
         return False
 
-    payload = _build_slack_payload(incident_data)
+    payload = _build_slack_payload(incident_data, needs_approval=needs_approval)
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -115,9 +175,10 @@ async def send_slack_alert(incident_data: dict[str, Any]) -> bool:
             resp.raise_for_status()
 
         logger.info(
-            "[slack-notifier] Alert sent to Slack for service=%s severity=%s",
+            "[slack-notifier] Alert sent to Slack for service=%s severity=%s approval=%s",
             incident_data.get("service_name"),
             incident_data.get("severity"),
+            needs_approval,
         )
         return True
 

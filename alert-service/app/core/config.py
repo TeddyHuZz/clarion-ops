@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     # Groq API Key for LLM-powered Root Cause Analysis
     GROQ_API_KEY: str | None = None
 
+    # Internal service token for deployment-service rollback calls
+    INTERNAL_SERVICE_TOKEN: str = "dev-internal-secret-key"
+
+    # Slack signing secret for verifying interactive payloads
+    SLACK_SIGNING_SECRET: str | None = None
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

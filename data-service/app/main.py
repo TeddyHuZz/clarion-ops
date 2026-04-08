@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import deployments, escalations, incidents, security
+from app.api.routers import analytics, deployments, escalations, incidents, security
 
 from .core.config import settings
 from .tasks.snapshot_worker import scheduler, setup_scheduler
@@ -38,6 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
 app.include_router(deployments.router, prefix="/api/v1/deployments", tags=["Deployments"])
 app.include_router(security.router, prefix="/api/v1/security", tags=["Security"])
 app.include_router(incidents.router, prefix="/api/v1/incidents", tags=["Incidents"])

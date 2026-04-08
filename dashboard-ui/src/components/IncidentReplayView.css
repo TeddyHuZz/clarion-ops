@@ -1,0 +1,682 @@
+/* ---------------------------------------------------------------------------
+ * Incident Replay View - Complete Styling
+ * --------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+ * Loading State
+ * --------------------------------------------------------------------------- */
+
+.replay-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+}
+
+.replay-loading__spinner {
+  color: var(--accent);
+}
+
+.replay-loading__spinner svg {
+  animation: replay-spin 1s linear infinite;
+}
+
+@keyframes replay-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Error State
+ * --------------------------------------------------------------------------- */
+
+.replay-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+}
+
+.replay-error__content {
+  text-align: center;
+}
+
+.replay-error__message {
+  color: #f87171;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.replay-error__retry {
+  padding: 0.5rem 1rem;
+  background: var(--primary-muted);
+  border: 1px solid var(--primary-border);
+  border-radius: 0.5rem;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.replay-error__retry:hover {
+  background: var(--primary-hover);
+}
+
+/* ---------------------------------------------------------------------------
+ * Container & Sections
+ * --------------------------------------------------------------------------- */
+
+.replay-container {
+  padding: 2rem;
+  max-width: 1800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.replay-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.replay-section__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Charts Grid
+ * --------------------------------------------------------------------------- */
+
+.replay-charts__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .replay-charts__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Cards
+ * --------------------------------------------------------------------------- */
+
+.replay-card {
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  border-radius: 0.75rem;
+}
+
+.replay-card--scrubber {
+  padding: 2rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Chart Headers
+ * --------------------------------------------------------------------------- */
+
+.replay-chart__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.replay-chart__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.replay-chart__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.replay-chart__subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.replay-chart__badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.replay-chart__badge--cpu {
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+.replay-chart__badge--memory {
+  background: rgba(251, 113, 133, 0.1);
+  border: 1px solid rgba(251, 113, 133, 0.2);
+}
+
+.replay-chart__badge-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.replay-chart__badge-dot--cpu {
+  background: #22d3ee;
+}
+
+.replay-chart__badge-dot--memory {
+  background: #fb7185;
+}
+
+.replay-chart__badge-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.replay-chart__badge-text--cpu {
+  color: #22d3ee;
+}
+
+.replay-chart__badge-text--memory {
+  color: #fb7185;
+}
+
+/* ---------------------------------------------------------------------------
+ * Event Log Section
+ * --------------------------------------------------------------------------- */
+
+.replay-events__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.replay-events__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 1rem;
+  color: var(--text-muted);
+}
+
+.replay-events__empty-icon {
+  margin-bottom: 1rem;
+  opacity: 0.2;
+}
+
+.replay-events__empty-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------------
+ * Individual Event Items
+ * --------------------------------------------------------------------------- */
+
+.replay-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  transition: background-color 0.2s ease;
+}
+
+.replay-event:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.replay-event--alert {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.replay-event--ai {
+  background: rgba(168, 85, 247, 0.05);
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.replay-event--deploy {
+  background: rgba(34, 197, 94, 0.05);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.replay-event--restored {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.replay-event__icon-container {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.replay-event__icon-container .replay-event__badge--alert {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.replay-event__icon-container .replay-event__badge--ai {
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.replay-event__icon-container .replay-event__badge--deploy {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.replay-event__icon-container .replay-event__badge--restored {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.replay-event__icon--alert {
+  color: #f87171;
+}
+
+.replay-event__icon--ai {
+  color: #22d3ee;
+}
+
+.replay-event__icon--deploy {
+  color: #4ade80;
+}
+
+.replay-event__icon--restored {
+  color: #34d399;
+}
+
+.replay-event__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.replay-event__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.replay-event__badge {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+}
+
+.replay-event__badge--alert {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.replay-event__badge--ai {
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.replay-event__badge--deploy {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.replay-event__badge--restored {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.replay-event__badge-text--alert {
+  color: #fca5a5;
+}
+
+.replay-event__badge-text--ai {
+  color: #c4b5fd;
+}
+
+.replay-event__badge-text--deploy {
+  color: #86efac;
+}
+
+.replay-event__badge-text--restored {
+  color: #6ee7b7;
+}
+
+.replay-event__time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.replay-event__payload {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.replay-event__payload-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "SF Mono", "Fira Code", monospace;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Scrubber Section
+ * --------------------------------------------------------------------------- */
+
+.replay-scrubber__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.replay-scrubber__description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.replay-scrubber__track {
+  position: relative;
+  height: 2rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Custom Scrollbar
+ * --------------------------------------------------------------------------- */
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) rgba(255, 255, 255, 0.02);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------------------------------------------------------------------------
+ * Timeline Scrubber — Native <input type="range">
+ * --------------------------------------------------------------------------- */
+
+input[type="range"].accent-accent {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  margin: 20px 0;
+}
+
+input[type="range"].accent-accent::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+input[type="range"].accent-accent::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 4px var(--accent-muted), 0 4px 16px rgba(0, 0, 0, 0.5);
+  transform: scale(1.1);
+}
+
+input[type="range"].accent-accent::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+
+input[type="range"].accent-accent::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+}
+
+/* Marker container positioned over the range input */
+.timeline-track__markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.timeline-event-marker {
+  position: absolute;
+  top: -4px;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 5;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.timeline-event-marker:hover {
+  transform: translateX(-50%) scale(1.25);
+  z-index: 20;
+}
+
+.timeline-event-marker--alert {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+.timeline-event-marker--ai {
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
+}
+
+.timeline-event-marker--deploy {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.timeline-event-marker--restored {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Marker Tooltip
+ * --------------------------------------------------------------------------- */
+
+.timeline-marker-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  max-width: 340px;
+  padding: 10px 14px;
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.timeline-marker-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+
+.timeline-event-marker:hover .timeline-marker-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.timeline-marker-tooltip__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-marker-tooltip__time {
+  font-size: 11px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.timeline-marker-tooltip__type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.timeline-marker-tooltip__type--alert {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.timeline-marker-tooltip__type--ai {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c4b5fd;
+}
+
+.timeline-marker-tooltip__type--deploy {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.timeline-marker-tooltip__type--restored {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.timeline-marker-tooltip__body {
+  font-size: 11px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------------------------------------------------------------------------
+ * Time Labels
+ * --------------------------------------------------------------------------- */
+
+.timeline-track__labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.timeline-track__label {
+  font-size: 11px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.timeline-track__current-time {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.timeline-track__current-time--icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-muted);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.timeline-track__current-time--value {
+  font-size: 20px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.timeline-track__current-time--label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+

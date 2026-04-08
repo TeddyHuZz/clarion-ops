@@ -62,8 +62,8 @@ services:
     ports:
       - "8002:8002"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://admin:secret@timescaledb:5432/guardian_data
-      - INTERNAL_API_KEY=dev-internal-secret-key
+      - DATABASE_URL=postgresql+asyncpg://admin:${POSTGRES_PASSWORD:-secret}@timescaledb:5432/guardian_data
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY:-dev-internal-secret-key}
     depends_on:
       - timescaledb
       - metrics-service
@@ -81,6 +81,8 @@ services:
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
       - DATA_SERVICE_URL=http://data-service:8002
       - GROQ_API_KEY=${GROQ_API_KEY}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN:-dev-internal-secret-key}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
     depends_on:
       - data-service
     networks:
@@ -111,7 +113,7 @@ services:
     container_name: timescaledb
     environment:
       - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secret}
       - POSTGRES_DB=guardian_data
     ports:
       - "5432:5432"

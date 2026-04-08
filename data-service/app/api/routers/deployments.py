@@ -104,3 +104,36 @@ async def update_deployment_risk(
     await db.commit()
 
     return {"status": "success", "commit_hash": commit_hash, "risk_score": risk_score}
+
+
+@router.get("/latest", response_model=DeploymentCreate)
+async def get_latest_deployment(
+    service_name: str,
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+):
+    """Return the most recent deployment for a given service."""
+    from sqlalchemy import select
+
+    query = (
+        select(DeploymentEvent)
+        .where(DeploymentEvent.service_name == service_name)
+        .order_by(DeploymentEvent.time.desc())
+        .limit(1)
+    )
+    result = await db.execute(query)
+    deployment = result.scalar_one_or_none()
+
+    if not deployment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No deployment found for service {service_name}",
+        )
+
+    return DeploymentCreate(
+        time=deployment.time,
+        service_name=deployment.service_name,
+        commit_hash=deployment.commit_hash,
+        author=deployment.author,
+        branch=deployment.branch,
+        status=deployment.status,
+    )

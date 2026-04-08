@@ -3,11 +3,12 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user_or_service
 from app.db.session import get_session
+from app.models.incident_logs import IncidentLog
 from app.models.incidents import IncidentEvent
 
 router = APIRouter()
@@ -20,6 +21,7 @@ router = APIRouter()
 VALID_STATUSES = Literal[
     "Open",
     "AI Investigating",
+    "Verifying",
     "Acknowledged",
     "Manual Intervention",
     "Resolved",
@@ -40,6 +42,12 @@ class StatusUpdate(BaseModel):
     """Schema for updating an incident's status."""
 
     status: VALID_STATUSES
+
+
+class LogEntry(BaseModel):
+    """Schema for appending an audit log entry to an incident."""
+
+    message: str = Field(..., min_length=1, max_length=4096)
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +130,39 @@ async def create_incident_event(
         "service_name": db_incident.service_name,
         "severity": db_incident.severity,
         "time": db_incident.time.isoformat(),
+    }
+
+
+@router.post("/{incident_id}/logs", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def create_incident_log(
+    incident_id: int,
+    payload: LogEntry,
+    db: AsyncSession = Depends(get_session),  # noqa: B008
+):
+    """
+    Internal endpoint to append an audit log entry to an incident.
+    Skips Clerk authentication — only callable from trusted internal services.
+    """
+    # Verify the parent incident exists
+    query = select(IncidentEvent.id).where(IncidentEvent.id == incident_id)
+    result = await db.execute(query)
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Incident not found")
+
+    stmt = (
+        insert(IncidentLog)
+        .values(incident_id=incident_id, message=payload.message)
+        .returning(IncidentLog.id, IncidentLog.time)
+    )
+    row = await db.execute(stmt)
+    await db.commit()
+    log_entry = row.mappings().one()
+
+    return {
+        "id": log_entry["id"],
+        "incident_id": incident_id,
+        "time": log_entry["time"].isoformat(),
+        "message": payload.message,
     }
 
 

@@ -35,7 +35,9 @@ import { SlaCard } from "./ui/SlaCard";
 import { DependencyMap } from "./ui/DependencyMap";
 import { DeploymentHistoryTable } from "./ui/DeploymentHistoryTable";
 
-type DashboardView = 'overview' | 'incidents' | 'pipelines' | 'security' | 'secrets' | 'settings';
+import { IncidentReplayView } from "./IncidentReplayView";
+
+type DashboardView = 'overview' | 'incidents' | 'replay' | 'pipelines' | 'security' | 'secrets' | 'settings';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<DashboardView>('overview');
@@ -60,6 +62,9 @@ export function Dashboard() {
 
   const renderView = () => {
     switch (activeView) {
+      case 'replay':
+        return <IncidentReplayView />;
+
       case 'pipelines':
         return (
           <section className="dashboard-section" style={{ marginTop: '2rem' }}>
@@ -181,6 +186,10 @@ export function Dashboard() {
             <AlertTriangle size={20} />
             {!sidebarCollapsed && 'Incidents'}
           </button>
+          <button onClick={() => setActiveView('replay')} className={`dashboard-nav__item ${activeView === 'replay' ? 'dashboard-nav__item--active' : ''}`} title="Replay">
+            <Activity size={20} />
+            {!sidebarCollapsed && 'Replay'}
+          </button>
           <button onClick={() => setActiveView('security')} className={`dashboard-nav__item ${activeView === 'security' ? 'dashboard-nav__item--active' : ''}`} title="Security">
             <ShieldAlert size={20} />
             {!sidebarCollapsed && 'Security'}
@@ -235,7 +244,8 @@ export function Dashboard() {
             <div className="dashboard-header__title">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <h1>
-                  {activeView === 'pipelines' ? 'Pipeline Audit Log' :
+                  {activeView === 'replay' ? 'Incident Timeline Replay' :
+                   activeView === 'pipelines' ? 'Pipeline Audit Log' :
                    activeView === 'incidents' ? 'Incident Response' :
                    'Intelligence Overview'}
                 </h1>
@@ -252,7 +262,9 @@ export function Dashboard() {
                 )}
               </div>
               <p>
-                {activeView === 'pipelines'
+                {activeView === 'replay'
+                  ? 'Scrub through historical events and metrics to analyze incident resolution.'
+                  : activeView === 'pipelines'
                   ? 'Historical audit of service deployments and pipeline events.'
                   : activeView === 'incidents'
                   ? 'Real-time incident tracking with escalation routing.'

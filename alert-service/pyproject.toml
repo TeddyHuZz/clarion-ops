@@ -31,3 +31,8 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
 python_version = "3.12"
 ignore_missing_imports = true
 no_namespace_packages = true
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.9",
+]

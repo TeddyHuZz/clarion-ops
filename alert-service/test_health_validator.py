@@ -13,10 +13,7 @@ This script:
 """
 
 import asyncio
-import json
-import os
 import sys
-import time
 
 import httpx
 
@@ -67,7 +64,6 @@ async def check_incident_status(incident_id: int) -> str | None:
 
 async def watch_logs():
     """Tail the alert-service logs and look for health validator output."""
-    import subprocess
 
     print("\n📋 Watching alert-service logs for health validator activity...")
     print("   (Press Ctrl+C to stop)\n")

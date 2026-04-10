@@ -123,7 +123,8 @@ services:
       - ./data-service/sql/init_deployments.sql:/docker-entrypoint-initdb.d/03_init_deployments.sql
       - ./data-service/sql/init_cve_scans.sql:/docker-entrypoint-initdb.d/04_init_cve_scans.sql
       - ./data-service/sql/init_escalation_policies.sql:/docker-entrypoint-initdb.d/05_init_escalation_policies.sql
-      - ./data-service/sql/risk_audit_migration.sql:/docker-entrypoint-initdb.d/06_risk_audit_migration.sql
+      - ./data-service/sql/init_ai_analysis.sql:/docker-entrypoint-initdb.d/06_init_ai_analysis.sql
+      - ./data-service/sql/risk_audit_migration.sql:/docker-entrypoint-initdb.d/07_risk_audit_migration.sql
     networks:
       - clarion-net
 

@@ -124,6 +124,30 @@ async def _post_incident_log(
         logger.warning("[audit-log] Failed to append log for incident %d", incident_id)
 
 
+async def _post_ai_analysis(
+    client: httpx.AsyncClient,
+    incident_id: int,
+    rca_result: dict[str, Any],
+    pod_logs: str | None = None,
+) -> None:
+    """Persist AI RCA results for an incident in data-service."""
+    try:
+        await client.post(
+            f"{DATA_BASE}/incidents/{incident_id}/ai-analysis",
+            json={
+                "root_cause_summary": rca_result["root_cause_summary"],
+                "confidence_score": rca_result["confidence_score"],
+                "recommended_action": rca_result["recommended_action"],
+                "pod_logs": pod_logs,
+            },
+            headers=INTERNAL_HEADERS,
+            timeout=10,
+        )
+        logger.info("[ai-analysis] Persisted RCA results for incident %d", incident_id)
+    except Exception:
+        logger.warning("[ai-analysis] Failed to persist RCA results for incident %d", incident_id)
+
+
 # ---------------------------------------------------------------------------
 # Context Aggregation
 # ---------------------------------------------------------------------------
@@ -245,6 +269,14 @@ async def _process_incident(
         confidence,
         recommended_action,
         root_cause,
+    )
+
+    # Step 4c: Persist AI analysis results to data-service
+    await _post_ai_analysis(
+        client,
+        incident_id,
+        rca_result,
+        pod_logs=context.get("pod_logs"),
     )
 
     # Step 5: Route based on AI recommendation

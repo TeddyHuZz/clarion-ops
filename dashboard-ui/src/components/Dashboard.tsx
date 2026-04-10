@@ -8,6 +8,7 @@ import {
   GitBranch,
   Settings,
   LogOut,
+  Brain,
   Search,
   Bell,
   Database,
@@ -32,17 +33,20 @@ import { useMetrics } from "../hooks/useMetrics";
 import { MetricChart } from "./ui/MetricChart";
 import { PodHealthTable } from "./ui/PodHealthTable";
 import { SlaCard } from "./ui/SlaCard";
+import { Card } from "./ui/card";
 import { DependencyMap } from "./ui/DependencyMap";
 import { DeploymentHistoryTable } from "./ui/DeploymentHistoryTable";
 
 import { IncidentReplayView } from "./IncidentReplayView";
+import { IncidentDetailView } from "./IncidentDetailView";
 
-type DashboardView = 'overview' | 'incidents' | 'replay' | 'pipelines' | 'security' | 'secrets' | 'settings';
+type DashboardView = 'overview' | 'incidents' | 'replay' | 'pipelines' | 'security' | 'secrets' | 'settings' | 'analysis';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<DashboardView>('overview');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedIncidentId, setSelectedIncidentId] = useState<number | null>(null);
   const { 
     cpuLoad, cpuHistory,
     memoryUsage, memoryHistory,
@@ -83,7 +87,45 @@ export function Dashboard() {
               <h2>Active Incidents</h2>
               <Badge variant="error">Live Feed</Badge>
             </div>
-            <ActiveIncidentsBoard />
+            <ActiveIncidentsBoard onViewDetail={(incident) => {
+              setSelectedIncidentId(incident.id);
+              setActiveView('analysis');
+            }} />
+          </section>
+        );
+
+      case 'analysis':
+        return (
+          <section className="dashboard-section" style={{ marginTop: '2rem' }}>
+            <div className="dashboard-section__header">
+              <h2>AI Analysis</h2>
+              <Badge variant="success">Groq Powered</Badge>
+            </div>
+            {selectedIncidentId !== null ? (
+              <IncidentDetailView
+                incidentId={selectedIncidentId}
+                onBack={() => {
+                  setSelectedIncidentId(null);
+                  setActiveView('incidents');
+                }}
+              />
+            ) : (
+              <Card padding="32px">
+                <div className="ai-analysis__empty">
+                  <Brain size={48} className="ai-analysis__empty-icon" />
+                  <p className="ai-analysis__empty-text">
+                    Select an incident from the Incidents board to view its AI analysis.
+                  </p>
+                  <button
+                    onClick={() => setActiveView('incidents')}
+                    className="incident-detail__back-btn"
+                    style={{ marginTop: '1rem' }}
+                  >
+                    Go to Incidents
+                  </button>
+                </div>
+              </Card>
+            )}
           </section>
         );
       
@@ -185,6 +227,10 @@ export function Dashboard() {
           <button onClick={() => setActiveView('incidents')} className={`dashboard-nav__item ${activeView === 'incidents' ? 'dashboard-nav__item--active' : ''}`} title="Incidents">
             <AlertTriangle size={20} />
             {!sidebarCollapsed && 'Incidents'}
+          </button>
+          <button onClick={() => setActiveView('analysis')} className={`dashboard-nav__item ${activeView === 'analysis' ? 'dashboard-nav__item--active' : ''}`} title="Analysis">
+            <Brain size={20} />
+            {!sidebarCollapsed && 'Analysis'}
           </button>
           <button onClick={() => setActiveView('replay')} className={`dashboard-nav__item ${activeView === 'replay' ? 'dashboard-nav__item--active' : ''}`} title="Replay">
             <Activity size={20} />

@@ -84,6 +84,10 @@ export function IncidentReplayView() {
 
   useEffect(() => {
     fetchData();
+
+    // Poll for fresh data every 30 seconds
+    const intervalId = setInterval(fetchData, 30_000);
+    return () => clearInterval(intervalId);
   }, [fetchData]);
 
   // Format time for display
@@ -440,18 +444,16 @@ export function IncidentReplayView() {
       </div>
 
       {/* Event Log Section */}
-      <div>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+      <div className="replay-section">
+        <h2 className="replay-section__title">
           Event Log
         </h2>
-        <Card padding="32px" className="border border-surface-border">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-1">Incident Events</h3>
-              <p className="text-sm text-muted-foreground">
-                {pastEvents.length} event{pastEvents.length !== 1 ? "s" : ""} prior to scrub position
-              </p>
-            </div>
+        <Card padding="32px" className="replay-card replay-card--scrubber">
+          <div className="replay-scrubber__title-group">
+            <h3 className="replay-scrubber__title">Incident Events</h3>
+            <p className="replay-scrubber__description">
+              {pastEvents.length} event{pastEvents.length !== 1 ? "s" : ""} prior to scrub position
+            </p>
           </div>
 
           <div className="replay-events__list custom-scrollbar">

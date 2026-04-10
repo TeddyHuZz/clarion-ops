@@ -60,9 +60,10 @@ interface IncidentDetailModalProps {
   incident: Incident | null;
   onCallUser: string | null;
   onClose: () => void;
+  onViewAnalysis: (incident: Incident) => void;
 }
 
-function IncidentDetailModal({ incident, onCallUser, onClose }: IncidentDetailModalProps) {
+function IncidentDetailModal({ incident, onCallUser, onClose, onViewAnalysis }: IncidentDetailModalProps) {
   if (!incident) return null;
 
   return (
@@ -71,9 +72,14 @@ function IncidentDetailModal({ incident, onCallUser, onClose }: IncidentDetailMo
       onClose={onClose}
       title="Incident Details"
       footer={
-        <Button variant="secondary" onClick={onClose}>
-          Close
-        </Button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <Button variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+          <Button onClick={() => onViewAnalysis(incident)}>
+            View AI Analysis
+          </Button>
+        </div>
       }
     >
       <div className="incident-detail">
@@ -239,13 +245,28 @@ function Column({ label, icon, color, incidents, onCallMap, isAdmin, onViewDetai
 // Board
 // ---------------------------------------------------------------------------
 
-export function ActiveIncidentsBoard() {
+interface ActiveIncidentsBoardProps {
+  onViewDetail?: (incident: Incident) => void;
+}
+
+export function ActiveIncidentsBoard({ onViewDetail }: ActiveIncidentsBoardProps) {
   const { user } = useUser();
   const { incidents, setIncidents, loading, error } = useIncidents();
   const { policies } = useEscalationPolicies();
   const { showToast, ToastContainer } = useToast();
   const updateStatus = useUpdateIncidentStatus(showToast);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+
+  const handleViewDetail = (incident: Incident) => {
+    setSelectedIncident(incident);
+  };
+
+  const handleViewAnalysis = (incident: Incident) => {
+    setSelectedIncident(null);
+    if (onViewDetail) {
+      onViewDetail(incident);
+    }
+  };
 
   const isAdmin = user?.publicMetadata?.role === 'admin';
 
@@ -290,7 +311,7 @@ export function ActiveIncidentsBoard() {
             incidents={incidents.filter(i => i.status === col.key)}
             onCallMap={onCallMap}
             isAdmin={isAdmin}
-            onViewDetail={setSelectedIncident}
+            onViewDetail={handleViewDetail}
             onStatusChange={handleStatusChange}
           />
         ))}
@@ -300,6 +321,7 @@ export function ActiveIncidentsBoard() {
         incident={selectedIncident}
         onCallUser={selectedIncident ? (onCallMap.get(String(selectedIncident.id)) ?? null) : null}
         onClose={() => setSelectedIncident(null)}
+        onViewAnalysis={handleViewAnalysis}
       />
 
       <ToastContainer />

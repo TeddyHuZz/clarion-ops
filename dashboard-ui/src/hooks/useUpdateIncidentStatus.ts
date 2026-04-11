@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useAuth } from '@clerk/react';
+import { toast } from 'sonner';
 import type { Incident } from './useIncidents';
 
 const API_BASE_URL = import.meta.env.VITE_DATA_API_URL || 'http://localhost:8002/api/v1';
@@ -11,9 +12,7 @@ type StatusUpdater = (
   setIncidents: (prev: Incident[] | ((prev: Incident[]) => Incident[])) => void,
 ) => Promise<void>;
 
-export function useUpdateIncidentStatus(
-  showToast: (type: 'success' | 'error', message: string) => void,
-): StatusUpdater {
+export function useUpdateIncidentStatus(): StatusUpdater {
   const { getToken } = useAuth();
 
   return useCallback(async (
@@ -34,7 +33,10 @@ export function useUpdateIncidentStatus(
       ),
     );
 
-    // 3. Fire the API request in the background
+    // 3. Show loading toast
+    const loadingId = toast.loading(`Updating incident to ${newStatus}...`);
+
+    // 4. Fire the API request
     try {
       const token = await getToken();
       if (!token) {
@@ -54,11 +56,15 @@ export function useUpdateIncidentStatus(
         throw new Error(`Failed to update status: ${response.status}`);
       }
 
-      showToast('success', `Incident marked as ${newStatus}`);
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingId);
+      toast.success(`Incident marked as ${newStatus}`);
     } catch (err) {
-      // 4. Rollback on failure
+      // 5. Rollback on failure
       setIncidents(previousIncidents);
-      showToast('error', err instanceof Error ? err.message : 'Failed to update incident');
+      // Dismiss loading toast and show error
+      toast.dismiss(loadingId);
+      toast.error(err instanceof Error ? err.message : 'Failed to update incident');
     }
-  }, [getToken, showToast]);
+  }, [getToken]);
 }

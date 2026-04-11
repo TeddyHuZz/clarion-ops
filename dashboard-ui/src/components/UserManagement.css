@@ -1,0 +1,201 @@
+/* ---------------------------------------------------------------------------
+ * User Management Table
+ * --------------------------------------------------------------------------- */
+
+.user-management {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.user-management__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-management__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.user-management__count {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+ * Unauthorized Placeholder
+ * --------------------------------------------------------------------------- */
+
+.user-management__unauthorized {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: var(--text-muted);
+  text-align: center;
+  gap: 1rem;
+}
+
+.user-management__unauthorized-icon {
+  opacity: 0.25;
+}
+
+.user-management__unauthorized-text {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.user-management__unauthorized-subtext {
+  font-size: 0.875rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Users Table
+ * --------------------------------------------------------------------------- */
+
+.user-management__table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.user-management__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-management__table thead {
+  border-bottom: 2px solid var(--surface-border);
+}
+
+.user-management__table th {
+  padding: 0.875rem 1.25rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.user-management__table td {
+  padding: 0.875rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-top: 1px solid var(--surface-border);
+}
+
+.user-management__table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.user-management__table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.user-management__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* User ID cell */
+.user-management__user-id {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Role badge */
+.user-management__role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.user-management__role-badge--admin {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c4b5fd;
+}
+
+.user-management__role-badge--user {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+/* Promote button */
+.user-management__promote-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 0.5rem;
+  color: #c4b5fd;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.user-management__promote-btn:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.user-management__promote-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.user-management__promote-spinner {
+  display: inline-block;
+  animation: user-mgmt-spin 0.6s linear infinite;
+}
+
+@keyframes user-mgmt-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Empty state */
+.user-management__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Loading skeleton */
+.user-management__skeleton-row td {
+  height: 48px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

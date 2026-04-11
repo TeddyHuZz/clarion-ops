@@ -1,52 +1,24 @@
-import { useState, useCallback } from 'react';
-import { CheckCircle, AlertCircle, X } from 'lucide-react';
+import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 export type ToastType = 'success' | 'error';
 
-interface ToastItem {
-  id: number;
-  type: ToastType;
-  message: string;
-}
-
-let nextId = 0;
-
+/**
+ * Drop-in replacement for the legacy useToast hook.
+ * Now powered by sonner. Returns the same { showToast, ToastContainer } shape.
+ */
 export function useToast() {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-
   const showToast = useCallback((type: ToastType, message: string) => {
-    const id = ++nextId;
-    setToasts(prev => [...prev, { id, type, message }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
+    if (type === 'success') {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   }, []);
 
-  const dismissToast = useCallback((id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
-
-  const ToastContainer = () => {
-    if (toasts.length === 0) return null;
-
-    return (
-      <div className="toast-container">
-        {toasts.map(toast => (
-          <div key={toast.id} className={`toast toast--${toast.type}`}>
-            {toast.type === 'success' ? (
-              <CheckCircle size={18} className="toast__icon" />
-            ) : (
-              <AlertCircle size={18} className="toast__icon" />
-            )}
-            <span className="toast__message">{toast.message}</span>
-            <button className="toast__dismiss" onClick={() => dismissToast(toast.id)}>
-              <X size={14} />
-            </button>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  // No-op container — sonner's <Toaster> is rendered in App.tsx
+  const ToastContainer = () => null;
 
   return { showToast, ToastContainer };
 }
+

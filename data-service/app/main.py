@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import analytics, deployments, escalations, incidents, security
+from app.api.routers import admin, analytics, deployments, escalations, incidents, security
 
 from .core.config import settings
 from .tasks.snapshot_worker import scheduler, setup_scheduler
@@ -43,6 +43,7 @@ app.include_router(deployments.router, prefix="/api/v1/deployments", tags=["Depl
 app.include_router(security.router, prefix="/api/v1/security", tags=["Security"])
 app.include_router(incidents.router, prefix="/api/v1/incidents", tags=["Incidents"])
 app.include_router(escalations.router, prefix="/api/v1/escalations", tags=["Escalations"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
 
 
 @app.get("/health", tags=["Health"])

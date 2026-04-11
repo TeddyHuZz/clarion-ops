@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     # Clerk Authentication
     CLERK_JWT_PUBLIC_KEY: str = ""  # To be filled from .env
+    CLERK_SECRET_KEY: str = ""  # Backend API key for Clerk Management API
+    CLERK_API_URL: str = "https://api.clerk.com/v1"
 
     # Snapshot Configuration
     SNAPSHOT_NAMESPACE: str = "test-ns"

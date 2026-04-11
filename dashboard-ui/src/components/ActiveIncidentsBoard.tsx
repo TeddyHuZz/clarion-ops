@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Kanban, Siren, Eye, CheckCircle2, Clock, AlertTriangle, User, Wrench } from 'lucide-react';
+import { Kanban, Siren, Eye, CheckCircle2, Clock, AlertTriangle, User, Wrench, Loader2 } from 'lucide-react';
 import { useUser } from '@clerk/react';
 import { Card, Modal, Button } from './ui';
 import { useIncidents, type Incident } from '../hooks/useIncidents';
 import { useEscalationPolicies } from '../hooks/useEscalationPolicies';
 import { useUpdateIncidentStatus } from '../hooks/useUpdateIncidentStatus';
-import { useToast } from '../hooks/useToast';
 import { formatTime } from '../lib/time';
-import '../hooks/useToast.css';
 import './ActiveIncidentsBoard.css';
 
 // ---------------------------------------------------------------------------
@@ -138,11 +136,12 @@ interface IncidentCardProps {
   incident: Incident;
   onCallUser: string | null;
   isAdmin: boolean;
+  isUpdating: boolean;
   onViewDetail: (incident: Incident) => void;
   onStatusChange: (incidentId: number, newStatus: string) => void;
 }
 
-function IncidentCard({ incident, onCallUser, isAdmin, onViewDetail, onStatusChange }: IncidentCardProps) {
+function IncidentCard({ incident, onCallUser, isAdmin, isUpdating, onViewDetail, onStatusChange }: IncidentCardProps) {
   const canAcknowledge = incident.status === 'Open' || incident.status === 'AI Investigating' || incident.status === 'Manual Intervention';
   const canResolve = incident.status !== 'Resolved';
 
@@ -172,16 +171,20 @@ function IncidentCard({ incident, onCallUser, isAdmin, onViewDetail, onStatusCha
               {canAcknowledge && (
                 <button
                   className="incident-card__action-btn"
+                  disabled={isUpdating}
                   onClick={() => onStatusChange(incident.id, 'Acknowledged')}
                 >
+                  {isUpdating && <Loader2 size={14} className="incident-card__action-spinner" />}
                   Acknowledge
                 </button>
               )}
               {canResolve && (
                 <button
                   className="incident-card__action-btn"
+                  disabled={isUpdating}
                   onClick={() => onStatusChange(incident.id, 'Resolved')}
                 >
+                  {isUpdating && <Loader2 size={14} className="incident-card__action-spinner" />}
                   Resolve
                 </button>
               )}
@@ -204,11 +207,12 @@ interface ColumnProps {
   incidents: Incident[];
   onCallMap: Map<string, string | null>;
   isAdmin: boolean;
+  updatingId: number | null;
   onViewDetail: (incident: Incident) => void;
   onStatusChange: (incidentId: number, newStatus: string) => void;
 }
 
-function Column({ label, icon, color, incidents, onCallMap, isAdmin, onViewDetail, onStatusChange }: ColumnProps) {
+function Column({ label, icon, color, incidents, onCallMap, isAdmin, updatingId, onViewDetail, onStatusChange }: ColumnProps) {
   return (
     <div className="kanban-column">
       <div className="kanban-column__header">
@@ -231,6 +235,7 @@ function Column({ label, icon, color, incidents, onCallMap, isAdmin, onViewDetai
               incident={incident}
               onCallUser={onCallMap.get(String(incident.id)) ?? null}
               isAdmin={isAdmin}
+              isUpdating={updatingId === incident.id}
               onViewDetail={onViewDetail}
               onStatusChange={onStatusChange}
             />
@@ -253,9 +258,9 @@ export function ActiveIncidentsBoard({ onViewDetail }: ActiveIncidentsBoardProps
   const { user } = useUser();
   const { incidents, setIncidents, loading, error } = useIncidents();
   const { policies } = useEscalationPolicies();
-  const { showToast, ToastContainer } = useToast();
-  const updateStatus = useUpdateIncidentStatus(showToast);
+  const updateStatus = useUpdateIncidentStatus();
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const handleViewDetail = (incident: Incident) => {
     setSelectedIncident(incident);
@@ -270,8 +275,13 @@ export function ActiveIncidentsBoard({ onViewDetail }: ActiveIncidentsBoardProps
 
   const isAdmin = user?.publicMetadata?.role === 'admin';
 
-  const handleStatusChange = useCallback((incidentId: number, newStatus: string) => {
-    updateStatus(incidentId, newStatus, incidents, setIncidents);
+  const handleStatusChange = useCallback(async (incidentId: number, newStatus: string) => {
+    setUpdatingId(incidentId);
+    try {
+      await updateStatus(incidentId, newStatus, incidents, setIncidents);
+    } finally {
+      setUpdatingId(null);
+    }
   }, [updateStatus, incidents, setIncidents]);
 
   // Build on-call lookup: incidentId → username
@@ -285,8 +295,23 @@ export function ActiveIncidentsBoard({ onViewDetail }: ActiveIncidentsBoardProps
 
   if (loading) {
     return (
-      <div className="kanban-loading">
-        <p>Loading incidents...</p>
+      <div className="kanban-board">
+        {COLUMNS.map(col => (
+          <div key={col.key} className="kanban-column">
+            <div className="kanban-column__header">
+              <div className="kanban-column__title" style={{ color: col.color }}>
+                {col.icon}
+                <span>{col.label}</span>
+              </div>
+              <div className="kanban-column__count kanban-column__count--skeleton" />
+            </div>
+            <div className="kanban-column__body">
+              {[1, 2].map(i => (
+                <div key={i} className="incident-card incident-card--skeleton" />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -311,6 +336,7 @@ export function ActiveIncidentsBoard({ onViewDetail }: ActiveIncidentsBoardProps
             incidents={incidents.filter(i => i.status === col.key)}
             onCallMap={onCallMap}
             isAdmin={isAdmin}
+            updatingId={updatingId}
             onViewDetail={handleViewDetail}
             onStatusChange={handleStatusChange}
           />
@@ -323,8 +349,6 @@ export function ActiveIncidentsBoard({ onViewDetail }: ActiveIncidentsBoardProps
         onClose={() => setSelectedIncident(null)}
         onViewAnalysis={handleViewAnalysis}
       />
-
-      <ToastContainer />
     </>
   );
 }

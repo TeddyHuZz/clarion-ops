@@ -139,3 +139,72 @@
   letter-spacing: 0.05em;
   margin-bottom: 1rem;
 }
+
+/* ---------------------------------------------------------------------------
+ * Skeleton Loaders
+ * --------------------------------------------------------------------------- */
+
+.incident-detail__back--skeleton,
+.incident-detail__title--skeleton,
+.incident-detail__severity--skeleton,
+.incident-detail__meta-item--skeleton,
+.incident-detail__section-title--skeleton,
+.ai-analysis__panel-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  color: transparent !important;
+  border-color: transparent !important;
+}
+
+.incident-detail__back--skeleton {
+  width: 180px;
+  height: 36px;
+  border-radius: 0.5rem;
+  cursor: default;
+  pointer-events: none;
+}
+
+.incident-detail__back--skeleton svg {
+  visibility: hidden;
+}
+
+.incident-detail__title--skeleton {
+  width: 160px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.incident-detail__severity--skeleton {
+  width: 60px;
+  height: 24px;
+  border-radius: 0.375rem;
+}
+
+.incident-detail__meta-item--skeleton {
+  width: 140px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.incident-detail__section-title--skeleton {
+  width: 100px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.ai-analysis__panel-skeleton {
+  width: 100%;
+  height: 200px;
+  border-radius: 0.75rem;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

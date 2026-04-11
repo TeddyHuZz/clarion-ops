@@ -63,8 +63,30 @@ export function IncidentDetailView({ incidentId, onBack }: IncidentDetailViewPro
 
   if (loading) {
     return (
-      <div className="incident-detail__loading">
-        <Loader2 size={32} />
+      <div className="incident-detail">
+        <button className="incident-detail__back incident-detail__back--skeleton">
+          <ArrowLeft size={18} />
+          Back to Incidents
+        </button>
+        <Card padding="24px" className="incident-detail__header-card">
+          <div className="incident-detail__header">
+            <div className="incident-detail__title-group">
+              <div className="incident-detail__title incident-detail__title--skeleton" />
+              <div className="incident-detail__severity incident-detail__severity--skeleton" />
+            </div>
+            <div className="incident-detail__meta">
+              <div className="incident-detail__meta-item incident-detail__meta-item--skeleton" />
+              <div className="incident-detail__meta-item incident-detail__meta-item--skeleton" />
+              <div className="incident-detail__meta-item incident-detail__meta-item--skeleton" />
+            </div>
+          </div>
+        </Card>
+        <div className="incident-detail__section">
+          <h3 className="incident-detail__section-title incident-detail__section-title--skeleton" />
+          <Card padding="32px">
+            <div className="ai-analysis__panel-skeleton" />
+          </Card>
+        </div>
       </div>
     );
   }

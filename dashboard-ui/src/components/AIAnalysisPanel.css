@@ -222,3 +222,65 @@
     transform: rotate(360deg);
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Skeleton Loaders
+ * --------------------------------------------------------------------------- */
+
+.ai-analysis__icon--skeleton,
+.ai-analysis__title--skeleton,
+.ai-analysis__confidence-badge--skeleton,
+.ai-analysis__summary--skeleton,
+.ai-analysis__evidence-trigger--skeleton,
+.ai-analysis__evidence-trigger__left--skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  color: transparent !important;
+  border-color: transparent !important;
+}
+
+.ai-analysis__icon--skeleton {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.ai-analysis__title--skeleton {
+  width: 200px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.ai-analysis__confidence-badge--skeleton {
+  width: 140px;
+  height: 28px;
+  border-radius: 9999px;
+}
+
+.ai-analysis__summary--skeleton {
+  height: 64px;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.ai-analysis__evidence-trigger--skeleton {
+  height: 48px;
+  border-radius: 0.75rem 0.75rem 0 0;
+  cursor: default;
+}
+
+.ai-analysis__evidence-trigger__left--skeleton {
+  width: 180px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

@@ -1,10 +1,7 @@
 import {
-  Shield,
   Activity,
   Zap,
-  Lock,
   LayoutDashboard,
-  ShieldAlert,
   GitBranch,
   Settings,
   LogOut,
@@ -17,6 +14,7 @@ import {
   AlertTriangle,
   PanelLeftClose,
   PanelLeftOpen,
+  Shield,
 } from "lucide-react";
 import { SignOutButton, UserButton } from "@clerk/react";
 import "./Dashboard.css";
@@ -39,8 +37,9 @@ import { DeploymentHistoryTable } from "./ui/DeploymentHistoryTable";
 
 import { IncidentReplayView } from "./IncidentReplayView";
 import { IncidentDetailView } from "./IncidentDetailView";
+import { UserManagement } from "./UserManagement";
 
-type DashboardView = 'overview' | 'incidents' | 'replay' | 'pipelines' | 'security' | 'secrets' | 'settings' | 'analysis';
+type DashboardView = 'overview' | 'incidents' | 'replay' | 'pipelines' | 'settings' | 'analysis';
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<DashboardView>('overview');
@@ -73,7 +72,7 @@ export function Dashboard() {
         return (
           <section className="dashboard-section" style={{ marginTop: '2rem' }}>
             <div className="dashboard-section__header">
-              <h2>Infrastructure Pipeline History</h2>
+              <h2 className="dashboard-section__title">Infrastructure Pipeline History</h2>
               <Badge variant="success">Synchronized with Node Hub</Badge>
             </div>
             <DeploymentHistoryTable />
@@ -84,7 +83,7 @@ export function Dashboard() {
         return (
           <section className="dashboard-section" style={{ marginTop: '2rem' }}>
             <div className="dashboard-section__header">
-              <h2>Active Incidents</h2>
+              <h2 className="dashboard-section__title">Active Incidents</h2>
               <Badge variant="error">Live Feed</Badge>
             </div>
             <ActiveIncidentsBoard onViewDetail={(incident) => {
@@ -98,7 +97,7 @@ export function Dashboard() {
         return (
           <section className="dashboard-section" style={{ marginTop: '2rem' }}>
             <div className="dashboard-section__header">
-              <h2>AI Analysis</h2>
+              <h2 className="dashboard-section__title">AI Analysis</h2>
               <Badge variant="success">Groq Powered</Badge>
             </div>
             {selectedIncidentId !== null ? (
@@ -129,6 +128,13 @@ export function Dashboard() {
           </section>
         );
       
+      case 'settings':
+        return (
+          <section className="dashboard-section" style={{ marginTop: '2rem' }}>
+            <UserManagement />
+          </section>
+        );
+
       case 'overview':
       default:
         return (
@@ -183,7 +189,7 @@ export function Dashboard() {
             {/* Pod Inventory Table */}
             <section className="dashboard-section">
               <div className="dashboard-section__header">
-                <h2>Active Pod Inventory</h2>
+                <h2 className="dashboard-section__title">Active Pod Inventory</h2>
                 <Badge variant="success">Synchronized</Badge>
               </div>
               <PodHealthTable pods={health ? [{
@@ -196,7 +202,7 @@ export function Dashboard() {
             {/* Service Topology Map */}
             <section className="dashboard-section" style={{ marginBottom: '40px' }}>
               <div className="dashboard-section__header">
-                <h2>Service Topology</h2>
+                <h2 className="dashboard-section__title">Service Topology</h2>
                 <Badge>Dynamic Overlay</Badge>
               </div>
               <DependencyMap />
@@ -236,17 +242,9 @@ export function Dashboard() {
             <Activity size={20} />
             {!sidebarCollapsed && 'Replay'}
           </button>
-          <button onClick={() => setActiveView('security')} className={`dashboard-nav__item ${activeView === 'security' ? 'dashboard-nav__item--active' : ''}`} title="Security">
-            <ShieldAlert size={20} />
-            {!sidebarCollapsed && 'Security'}
-          </button>
           <button onClick={() => setActiveView('pipelines')} className={`dashboard-nav__item ${activeView === 'pipelines' ? 'dashboard-nav__item--active' : ''}`} title="Pipelines">
             <GitBranch size={20} />
             {!sidebarCollapsed && 'Pipelines'}
-          </button>
-          <button onClick={() => setActiveView('secrets')} className={`dashboard-nav__item ${activeView === 'secrets' ? 'dashboard-nav__item--active' : ''}`} title="Secrets">
-            <Lock size={20} />
-            {!sidebarCollapsed && 'Secrets'}
           </button>
           <button onClick={() => setActiveView('settings')} className={`dashboard-nav__item ${activeView === 'settings' ? 'dashboard-nav__item--active' : ''}`} title="Settings">
             <Settings size={20} />
@@ -293,6 +291,8 @@ export function Dashboard() {
                   {activeView === 'replay' ? 'Incident Timeline Replay' :
                    activeView === 'pipelines' ? 'Pipeline Audit Log' :
                    activeView === 'incidents' ? 'Incident Response' :
+                   activeView === 'analysis' ? 'AI Analysis' :
+                   activeView === 'settings' ? 'Settings' :
                    'Intelligence Overview'}
                 </h1>
                 {health ? (
@@ -314,6 +314,10 @@ export function Dashboard() {
                   ? 'Historical audit of service deployments and pipeline events.'
                   : activeView === 'incidents'
                   ? 'Real-time incident tracking with escalation routing.'
+                  : activeView === 'analysis'
+                  ? 'AI-powered root cause analysis and incident insights.'
+                  : activeView === 'settings'
+                  ? 'Manage user roles and system configuration.'
                   : 'Real-time telemetry and resource performance analysis.'}
               </p>
             </div>

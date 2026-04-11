@@ -115,6 +115,15 @@
 
 /* Card layouts are now handled by .ui-card in ui.css */
 
+.dashboard-section__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
 .dashboard-card__header {
   display: flex;
   justify-content: space-between;
@@ -183,8 +192,12 @@
 }
 
 .dashboard-section__header h2 {
-  font-size: 1.25rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
 }
 
 /* Table card is now handled by .ui-card in ui.css */

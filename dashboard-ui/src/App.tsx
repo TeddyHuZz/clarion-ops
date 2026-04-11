@@ -1,4 +1,5 @@
 import { Show, SignInButton, SignUpButton } from "@clerk/react";
+import { Toaster } from "sonner";
 import { Dashboard } from "./components/Dashboard";
 import "./App.css";
 
@@ -46,6 +47,8 @@ function LandingPage() {
 function App() {
   return (
     <>
+      <Toaster position="top-right" richColors theme="dark" />
+
       <Show when="signed-in">
         <div className="dashboard-view">
           <Dashboard />

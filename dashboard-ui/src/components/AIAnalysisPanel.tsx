@@ -83,8 +83,25 @@ export function AIAnalysisPanel({ incidentId }: AIAnalysisPanelProps) {
   if (loading) {
     return (
       <Card padding="32px">
-        <div className="ai-analysis__loading">
-          <Loader2 size={28} />
+        <div className="ai-analysis-panel">
+          {/* Skeleton Header */}
+          <div className="ai-analysis__header">
+            <div className="ai-analysis__title-group">
+              <div className="ai-analysis__icon ai-analysis__icon--skeleton" />
+              <div className="ai-analysis__title ai-analysis__title--skeleton" />
+            </div>
+            <div className="ai-analysis__confidence-badge ai-analysis__confidence-badge--skeleton" />
+          </div>
+          {/* Skeleton Summary */}
+          <div className="ai-analysis__summary ai-analysis__summary--skeleton" />
+          {/* Skeleton Evidence */}
+          <div className="ai-analysis__evidence">
+            <div className="ai-analysis__evidence-trigger ai-analysis__evidence-trigger--skeleton">
+              <div className="ai-analysis__evidence-trigger__left">
+                <div className="ai-analysis__evidence-trigger__left--skeleton" />
+              </div>
+            </div>
+          </div>
         </div>
       </Card>
     );

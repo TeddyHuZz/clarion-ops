@@ -63,9 +63,9 @@ export function IncidentReplayView() {
       setTimeline(timelineData);
 
       // 2. Fetch Historical Metrics (Mocking for demo, replace with actual metrics endpoint)
-      // In a real app, you'd fetch this from your metrics-service
-      const mockMetrics: MetricPoint[] = Array.from({ length: 50 }, (_, i) => ({
-        timestamp: new Date(Date.now() - (50 - i) * 60000).toISOString(),
+      // Generates 120 data points at 1-minute intervals, spanning the last 2 hours
+      const mockMetrics: MetricPoint[] = Array.from({ length: 120 }, (_, i) => ({
+        timestamp: new Date(Date.now() - (120 - i) * 60000).toISOString(),
         cpu: 30 + Math.random() * 60,
         memory: 250 + Math.random() * 100,
       }));
